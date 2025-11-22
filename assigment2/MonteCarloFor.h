@@ -7,9 +7,10 @@
 #include <iostream>
 #include <iomanip>
 #include <random>
-#include <omp.h>s
+#include <omp.h>
 
 class MonteCarloFor {
+public:
     void monteCarloFor();
 };
 
