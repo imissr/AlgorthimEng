@@ -1,7 +1,7 @@
 #include "benchmark.h"
 #include "min_max_quicksort.h"
 
-#include <parallel/algorithm>   // __gnu_parallel::sort, __gnu_sequential::sort
+#include <parallel/algorithm>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
@@ -12,7 +12,6 @@
 
 using Clock = std::chrono::high_resolution_clock;
 
-// Helper: time a function (seconds)
 template <class F>
 double time_it(F&& f) {
     auto start = Clock::now();
@@ -132,9 +131,8 @@ void benchmark::run() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    print_environment_info();  // <--- add this
+    print_environment_info();
 
-    // Optional: correctness sanity check
     const std::vector<int64_t> test_sizes = {0, 1, 23, 133, 1777, 57462, 786453};
     for (auto n : test_sizes) {
         if (!verify_qs_correctness(n)) {
@@ -143,7 +141,6 @@ void benchmark::run() {
         }
     }
 
-    // Array sizes (last one >= 1e7 as required)
     const std::vector<std::size_t> sizes = {
         100000,
         300000,
@@ -156,15 +153,13 @@ void benchmark::run() {
 
     const int max_threads = omp_get_max_threads();
 
-    // CSV header: same format as before
     std::cout << "N,threads,time_std,time_minmax,time_gnu\n";
 
     for (std::size_t N : sizes) {
         std::vector<int64_t> base(N);
         fill_random(base);
 
-        // --- Baseline: std::sort (sequential) ---
-        // Use __gnu_sequential::sort to avoid accidental parallelism
+
         std::vector<int64_t> arr_std = base;
         double t_std = time_it([&] {
             __gnu_sequential::sort(arr_std.begin(), arr_std.end());
@@ -173,7 +168,7 @@ void benchmark::run() {
         std::vector<int64_t> reference = arr_std;
 
         for (int threads = 1; threads <= max_threads; ++threads) {
-            // --- min_max_quicksort ---
+
             std::vector<int64_t> arr_mm = base;
             double t_mm = time_it([&] {
                 min_max_quicksort(arr_mm.data(), static_cast<int64_t>(arr_mm.size()), threads);
@@ -184,9 +179,9 @@ void benchmark::run() {
                           << N << " threads=" << threads << "\n";
             }
 
-            // --- __gnu_parallel::sort ---
+
             std::vector<int64_t> arr_gnu = base;
-            omp_set_num_threads(threads); // control threads for parallel mode
+            omp_set_num_threads(threads);
             double t_gnu = time_it([&] {
                 __gnu_parallel::sort(arr_gnu.begin(), arr_gnu.end());
             });
@@ -196,7 +191,6 @@ void benchmark::run() {
                           << N << " threads=" << threads << "\n";
             }
 
-            // CSV line
             std::cout << N << "," << threads << ","
                       << t_std << "," << t_mm << "," << t_gnu << "\n";
         }

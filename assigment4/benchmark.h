@@ -22,7 +22,6 @@ class benchmark {
 public:
 
 
-    // Führt alle Messungen aus und schreibt CSV auf stdout
     static void run();
 };
 

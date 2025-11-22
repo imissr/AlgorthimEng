@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 df = pd.read_csv("results.csv")
 
-# baseline time per N (time_std is the same for all threads, but we just take threads==1)
 baseline = df[df["threads"] == 1][["N", "time_std"]].set_index("N")["time_std"]
 
 def add_speedup_columns(group):

@@ -7,12 +7,11 @@
 #include <parallel/algorithm>
 #include <cstdint>
 
-// compute the average of two integers without overflow
 inline int64_t average(int64_t a, int64_t b) {
     return (a & b) + ((a ^ b) >> 1);
 }
 
-// partitioning function for quicksort
+
 inline int64_t
 partition(int64_t *arr, int64_t left, int64_t right, int64_t pivot,
           int64_t &smallest, int64_t &biggest) {
@@ -62,7 +61,6 @@ void qs_core(int64_t *arr, int64_t left, int64_t right, const int64_t pivot) {
     qs_core(arr, bound, right, average(pivot, biggest));
 }
 
-// wrapper for the quicksort function
 void min_max_quicksort(int64_t *arr, int64_t n, int num_threads) {
     if (n <= 1) return;
     if (num_threads <= 0) {
@@ -74,7 +72,6 @@ void min_max_quicksort(int64_t *arr, int64_t n, int num_threads) {
     qs_core(arr, 0, n - 1, arr[average(0, n - 1)]);
 }
 
-// class for generating random numbers
 class Xoroshiro128Plus {
     uint64_t state[2]{};
 
@@ -109,8 +106,8 @@ bool verify_qs_correctness(int64_t size) {
     for (int64_t i = 0; i < size; ++i) {
         data[i] = static_cast<int64_t>(generator());
     }
-    std::vector<int64_t> data_copy = data; // Duplicate for std::sort
+    std::vector<int64_t> data_copy = data;
     min_max_quicksort(data.data(), size);
     std::sort(data_copy.begin(), data_copy.end());
-    return data == data_copy; // check if arrays are equal
+    return data == data_copy;
 }
