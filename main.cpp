@@ -2,6 +2,8 @@
 #include "assigment1/MonteCarlo.h"
 #include "assigment2/MonteCarloFor.h"
 #include "assigment3/pi_monte_carlo_with_LCG.h"
+#include "assigment4/benchmark.h"
+
 
 // TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 int main() {
@@ -10,7 +12,8 @@ int main() {
     MonteCarloFor test2;
     //test2.monteCarloFor();
     pi_monte_carlo_with_LCG test3;
-    test3.pi_monte_carlo_LCG();
+   // test3.pi_monte_carlo_LCG();
+    benchmark::run();
 
 
     return 0;
