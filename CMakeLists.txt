@@ -56,3 +56,4 @@ add_executable(Test2
         assigment3/Test2.cpp
 )
 target_link_libraries(Test2 PRIVATE algeng_core)
+

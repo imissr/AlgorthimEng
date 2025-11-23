@@ -11,13 +11,6 @@
 #include <sstream>
 #include <iomanip>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#ifdef __linux__
-#include <unistd.h>  // sysconf for RAM on Linux
-#endif
 class benchmark {
 public:
 

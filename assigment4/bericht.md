@@ -28,6 +28,14 @@
     - The scheduler puts threads on cores in an unlucky way.
     - Background processes briefly use CPU or memory.  
 
+PC specifications : 
+CPU: 13th Gen Intel R Core I7-13700KF
+OperationSystem : Windows11
+RAM: 32GB DDR5 4000MT/s 
+Compiler: G++ 
+
+
+
 ## Observations and Explanation 
 
 * **There is no single global “now” in concurrent programs.**

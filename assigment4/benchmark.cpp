@@ -30,108 +30,14 @@ static void fill_random(std::vector<int64_t>& v) {
     );
     for (auto &x : v) x = dist(rng);
 }
-static void print_environment_info() {
-    // ----- OS name -----
-    std::string os_name = "Unknown";
-#if defined(_WIN32)
-    os_name = "Windows";
-#elif defined(__linux__)
-    os_name = "Linux";
-#elif defined(__APPLE__)
-    os_name = "macOS";
-#endif
 
-    // ----- CPU name (best-effort) -----
-    std::string cpu_name = "Unknown";
-
-#if defined(__linux__)
-    // Read from /proc/cpuinfo
-    std::ifstream cpuinfo("/proc/cpuinfo");
-    std::string line;
-    while (std::getline(cpuinfo, line)) {
-        if (line.rfind("model name", 0) == 0) {
-            auto pos = line.find(':');
-            if (pos != std::string::npos && pos + 2 < line.size()) {
-                cpu_name = line.substr(pos + 2);
-            }
-            break;
-        }
-    }
-#elif defined(_WIN32)
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
-
-    std::string arch = "Unknown arch";
-    switch (sysinfo.wProcessorArchitecture) {
-    case PROCESSOR_ARCHITECTURE_AMD64: arch = "x86_64"; break;
-    case PROCESSOR_ARCHITECTURE_INTEL: arch = "x86"; break;
-    case PROCESSOR_ARCHITECTURE_ARM:   arch = "ARM"; break;
-    case PROCESSOR_ARCHITECTURE_ARM64: arch = "ARM64"; break;
-    default: break;
-    }
-
-    unsigned hw_threads = std::thread::hardware_concurrency();
-    cpu_name = arch + " (" + std::to_string(hw_threads) + " logical cores)";
-#endif
-
-    // ----- RAM (best-effort) -----
-    std::string ram_str = "Unknown";
-
-#if defined(__linux__)
-    long pages     = sysconf(_SC_PHYS_PAGES);
-    long page_size = sysconf(_SC_PAGE_SIZE);
-    if (pages > 0 && page_size > 0) {
-        double ram_gb = static_cast<double>(pages) * page_size
-                        / (1024.0 * 1024.0 * 1024.0);
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(1) << ram_gb << " GB";
-        ram_str = oss.str();
-    }
-#elif defined(_WIN32)
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    if (GlobalMemoryStatusEx(&statex)) {
-        double ram_gb = static_cast<double>(statex.ullTotalPhys)
-                        / (1024.0 * 1024.0 * 1024.0);
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(1) << ram_gb << " GB";
-        ram_str = oss.str();
-    }
-#endif
-
-    // ----- Compiler -----
-    std::string compiler = "Unknown";
-#if defined(__clang__)
-    compiler = std::string("Clang ") +
-               std::to_string(__clang_major__) + "." +
-               std::to_string(__clang_minor__) + "." +
-               std::to_string(__clang_patchlevel__);
-#elif defined(__GNUC__)
-    compiler = std::string("GCC ") +
-               std::to_string(__GNUC__) + "." +
-               std::to_string(__GNUC_MINOR__) + "." +
-               std::to_string(__GNUC_PATCHLEVEL__);
-#elif defined(_MSC_VER)
-    compiler = std::string("MSVC ") + std::to_string(_MSC_VER);
-#endif
-
-     hw_threads = std::thread::hardware_concurrency();
-
-    // Print to stderr so stdout remains clean CSV
-    std::cerr << "# Benchmark environment:\n"
-              << "#   OS      : " << os_name << "\n"
-              << "#   CPU     : " << cpu_name << "\n"
-              << "#   RAM     : " << ram_str << "\n"
-              << "#   Cores   : " << hw_threads << "\n"
-              << "#   Compiler: " << compiler << "\n\n";
-}
 
 
 void benchmark::run() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    print_environment_info();
+
 
     const std::vector<int64_t> test_sizes = {0, 1, 23, 133, 1777, 57462, 786453};
     for (auto n : test_sizes) {
