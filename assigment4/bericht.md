@@ -28,3 +28,16 @@
     - The scheduler puts threads on cores in an unlucky way.
     - Background processes briefly use CPU or memory.  
 
+## Observations and Explanation 
+
+* **There is no single global “now” in concurrent programs.**
+
+    * Different CPU cores and caches can see memory changes in different orders.
+    * The compiler and hardware are allowed to reorder reads and writes (as long as each *single* thread behaves “as if” it runs normally).
+    * Because of this, two threads cannot safely communicate just by writing/reading normal variables – they need atomics, locks, or fences to create clear “meeting points”.
+
+* **Weaker memory orderings are a performance tool.**
+
+    * Sequentially consistent atomics are easiest to think about but can be slow on weakly ordered CPUs (like ARM).
+    * The paper explains how *acquire/release* and *relaxed* atomics allow us to enforce only the minimal ordering we actually need.
+    * This avoids unnecessary memory barriers and can give much better performance, while still keeping the program correct if used carefully.
