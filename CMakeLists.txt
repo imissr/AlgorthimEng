@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
-project(AlgEng LANGUAGES CXX)
+project(AlgEng LANGUAGES CXX C)
 
 # ---- C++ standard, like in the slides ----
 set(CMAKE_CXX_STANDARD 20)
@@ -21,7 +21,13 @@ add_library(algeng_core STATIC
         assigment4/benchmark.h
         assigment4/min_max_quicksort.cpp
         assigment4/min_max_quicksort.h
+  
 )
+
+
+
+# ---- Subdirectories ----
+add_subdirectory(assigment5)
 
 # All headers are reachable via the project root (e.g. #include "assigment1/MonteCarlo.h")
 target_include_directories(algeng_core
@@ -50,10 +56,10 @@ target_link_libraries(AlgEng PRIVATE algeng_core)
 add_executable(Test1
         assigment3/Test1.cpp
 )
+
 target_link_libraries(Test1 PRIVATE algeng_core)
 
 add_executable(Test2
         assigment3/Test2.cpp
 )
 target_link_libraries(Test2 PRIVATE algeng_core)
-
