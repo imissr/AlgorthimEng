@@ -28,6 +28,7 @@ add_library(algeng_core STATIC
 
 # ---- Subdirectories ----
 add_subdirectory(assigment5)
+add_subdirectory(project)
 
 # All headers are reachable via the project root (e.g. #include "assigment1/MonteCarlo.h")
 target_include_directories(algeng_core
@@ -45,13 +46,6 @@ target_link_libraries(algeng_core
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_definitions(algeng_core PUBLIC _GLIBCXX_PARALLEL)
 endif ()
-
-# ---- Executables ----
-
-add_executable(AlgEng
-        main.cpp
-)
-target_link_libraries(AlgEng PRIVATE algeng_core)
 
 add_executable(Test1
         assigment3/Test1.cpp
