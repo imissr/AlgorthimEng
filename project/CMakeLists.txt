@@ -1,4 +1,4 @@
-add_executable(AlgEng
+add_executable(project_executable
         src/io/token_reader.cpp
         src/io/token_reader.h
         src/io/ppm_reader.cpp
@@ -27,9 +27,9 @@ add_executable(AlgEng
         src/util/args_parser.cpp
 )
 
-target_include_directories(AlgEng
+target_include_directories(project_executable
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(AlgEng PRIVATE algeng_core)
+target_link_libraries(project_executable PRIVATE algeng_core)
