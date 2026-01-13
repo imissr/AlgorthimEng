@@ -25,6 +25,14 @@ add_executable(project_executable
         src/util/logging.h
         src/util/args_parser.h
         src/util/args_parser.cpp
+        src/ops/threshold_otsu.cpp
+        src/ops/threshold_otsu.h
+        src/ops/threshold_sauvola.cpp
+        src/ops/threshold_sauvola.h
+        src/ops/morphology.cpp
+        src/ops/morphology.h
+        src/ops/border_cleanup.cpp
+        src/ops/border_cleanup.h
 )
 
 target_include_directories(project_executable

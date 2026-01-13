@@ -219,3 +219,23 @@ If you want black/white output:
 If you tell me the language you’re using (C / C++ / Java / Python), I can provide a starter skeleton (folder structure + core structs/classes + token reader pseudocode) tailored to it.
 
 
+Turn off Otsu
+
+Remove --otsu from your command.
+
+If you added Sauvola, also ensure you don’t pass --sauvola ....
+
+Example (no binarization):
+
+AlgEng.exe in.ppm out.ppm --median 1 --bg-radius 30 --target 0.90 --contrast-pct 1 99
+
+
+Turn off border cleanup
+
+Remove --border ... and --border-dark ....
+
+Example (Otsu on, border off):
+
+AlgEng.exe in.ppm out.ppm --median 1 --bg-radius 30 --target 0.90 --contrast-pct 1 99 --otsu
+Example (border on, Otsu off):
+AlgEng.exe in.ppm out.ppm --median 1 --bg-radius 30 --target 0.90 --contrast-pct 1 99 --border-dark 15 0.6

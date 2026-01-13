@@ -11,6 +11,10 @@
 #include "src/ops/background_remove.h"
 #include "src/ops/contrast_stretch.h"
 #include "src/ops/denoise_median.h"
+#include "src/ops/threshold_otsu.h"
+#include "src/ops/threshold_sauvola.h"
+#include "src/ops/morphology.h"
+#include "src/ops/border_cleanup.h"
 
 int main(int argc, char **argv)
 {
@@ -67,7 +71,43 @@ int main(int argc, char **argv)
             }
         }
 
-        auto outRgb = grayToRgb(stretched);
+        auto result = stretched;
+
+        // binarization (OCR)
+        if (args.otsu) {
+            result = threshold_otsu::binarize(result);
+            if (args.verbose) std::cout << "Applied Otsu binarization\n";
+        } else if (args.sauvola) {
+            result = threshold_sauvola::binarize(result, args.sauvolaRadius, args.sauvolaK);
+            if (args.verbose) {
+                std::cout << "Applied Sauvola binarization: r=" << args.sauvolaRadius
+                          << " k=" << args.sauvolaK << "\n";
+            }
+        }
+
+        // morphology (binary cleanup)
+        if (args.morphOpen) {
+            result = morphology::open3x3(result);
+            if (args.verbose) std::cout << "Applied morphology open3x3\n";
+        }
+        if (args.morphClose) {
+            result = morphology::close3x3(result);
+            if (args.verbose) std::cout << "Applied morphology close3x3\n";
+        }
+
+        // border cleanup
+        if (args.borderDark) {
+            result = border_cleanup::whitenDarkEdges(result, args.borderDarkWidth, args.borderDarkThresholdFrac);
+            if (args.verbose) {
+                std::cout << "Applied border-dark: w=" << args.borderDarkWidth
+                          << " thr=" << args.borderDarkThresholdFrac << "\n";
+            }
+        } else if (args.border) {
+            result = border_cleanup::whitenEdges(result, args.borderWidth);
+            if (args.verbose) std::cout << "Applied border whiten: w=" << args.borderWidth << "\n";
+        }
+
+        auto outRgb = grayToRgb(result);
         ppm_writer::writePPMImage(args.output, outRgb);
 
         if (args.verbose) {
