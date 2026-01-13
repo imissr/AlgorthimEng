@@ -1,42 +1,31 @@
 cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 project(AlgEng LANGUAGES CXX C)
 
-# ---- C++ standard, like in the slides ----
+# ---- C++ standard ----
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF) # no compiler-specific extensions
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ---- OpenMP (imported target) ----
+# ---- OpenMP ----
 find_package(OpenMP REQUIRED)
 
-# ---- Core library with all assignment code ----
+# ---- Core library (NO mains here) ----
 add_library(algeng_core STATIC
         assigment1/MonteCarlo.cpp
-        assigment1/MonteCarlo.h
         assigment2/MonteCarloFor.cpp
-        assigment2/MonteCarloFor.h
         assigment3/pi_monte_carlo_with_LCG.cpp
-        assigment3/pi_monte_carlo_with_LCG.h
         assigment4/benchmark.cpp
-        assigment4/benchmark.h
         assigment4/min_max_quicksort.cpp
-        assigment4/min_max_quicksort.h
-  
+
 )
 
-
-
-# ---- Subdirectories ----
-add_subdirectory(assigment5)
-add_subdirectory(project)
-
-# All headers are reachable via the project root (e.g. #include "assigment1/MonteCarlo.h")
+# Headers reachable via project root (e.g. #include "assigment1/MonteCarlo.h")
 target_include_directories(algeng_core
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Link OpenMP only once to the core lib, like the picomp example
+# Link OpenMP once to the core lib
 target_link_libraries(algeng_core
         PUBLIC
         OpenMP::OpenMP_CXX
@@ -47,13 +36,27 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_definitions(algeng_core PUBLIC _GLIBCXX_PARALLEL)
 endif ()
 
-add_executable(Test1
-        assigment3/Test1.cpp
+# ---- Executables (each has exactly one main) ----
+add_executable(main_assigment1
+        assigment1/main_assigment1.cpp
 )
+target_link_libraries(main_assigment1 PRIVATE algeng_core)
 
-target_link_libraries(Test1 PRIVATE algeng_core)
 
-add_executable(Test2
-        assigment3/Test2.cpp
+add_executable(main_assigment2 assigment2/main_assigment2.cpp)
+target_link_libraries(main_assigment2 PRIVATE algeng_core)
+
+
+add_executable(main_assigment3
+        assigment3/main_assigment3.cpp
 )
-target_link_libraries(Test2 PRIVATE algeng_core)
+target_link_libraries(main_assigment3 PRIVATE algeng_core)
+
+add_executable(main_assigment4 assigment4/main_assigment4.cpp)
+target_link_libraries(main_assigment4 PRIVATE algeng_core)
+
+
+
+# ---- Subdirectories ----
+add_subdirectory(assigment5)
+add_subdirectory(project)

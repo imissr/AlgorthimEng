@@ -10,6 +10,9 @@
 #include <omp.h>
 #include <thread>
 
+#include "assigment4/benchmark.h"
+#include "assigment4/min_max_quicksort.h"
+
 using Clock = std::chrono::high_resolution_clock;
 
 template <class F>

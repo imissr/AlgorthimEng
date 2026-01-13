@@ -2,7 +2,7 @@
 // Created by khale on 19.11.2025.
 //
 
-#include "MonteCarloFor.h"
+#include "assigment2/MonteCarloFor.h"
 
 using namespace std;
 

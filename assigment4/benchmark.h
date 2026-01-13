@@ -15,7 +15,7 @@ class benchmark {
 public:
 
 
-    static void run();
+     void run();
 };
 
 #endif // ALGENG_BENCHMARK_H

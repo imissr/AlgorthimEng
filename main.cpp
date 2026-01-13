@@ -13,7 +13,6 @@ int main() {
     //test2.monteCarloFor();
     pi_monte_carlo_with_LCG test3;
    // test3.pi_monte_carlo_LCG();
-    benchmark::run();
 
 
     return 0;
