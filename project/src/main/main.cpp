@@ -2,20 +2,22 @@
 #include <iostream>
 #include <string>
 
-#include "src/util/args_parser.h"
+#include "ops/morphology.h"
+#include "ops/threshold_nick.h"
+#include "ops/threshold_otsu.h"
+#include "ops/threshold_sauvola.h"
+#include "util/args_parser.h"
 
-#include "src/image/colorspace.h"
-#include "src/io/ppm_reader.h"
-#include "src/io/ppm_writer.h"
-#include "src/ops/background_estimate.h"
-#include "src/ops/background_remove.h"
-#include "src/ops/contrast_stretch.h"
-#include "src/ops/denoise_median.h"
-#include "src/ops/threshold_otsu.h"
-#include "src/ops/threshold_sauvola.h"
-#include "src/ops/morphology.h"
-#include "src/ops/border_cleanup.h"
-#include "src/ops/threshold_nick.h"
+#include "image/colorspace.h"
+#include "io/ppm_reader.h"
+#include "io/ppm_writer.h"
+#include "ops/background_estimate.h"
+#include "ops/background_remove.h"
+#include "ops/contrast_stretch.h"
+#include "ops/denoise_median.h"
+#include "ops/threshold_su.h"
+#include "ops/border_cleanup.h"
+#include <omp.h>
 
 int main(int argc, char **argv)
 {
@@ -82,6 +84,13 @@ int main(int argc, char **argv)
             result = threshold_nick::binarize(result, args.nickRadius, args.nickK);
             if (args.verbose) {
                 std::cout << "Applied NICK: r=" << args.nickRadius << " k=" << args.nickK << "\n";
+            }
+        } else if (args.su) {   // <<< ADD THIS
+            result = threshold_su::binarize(result, args.suRadius, args.suNmin, args.suEps);
+            if (args.verbose) {
+                std::cout << "Applied SU: r=" << args.suRadius
+                          << " Nmin=" << args.suNmin
+                          << " eps=" << args.suEps << "\n";
             }
         }
 

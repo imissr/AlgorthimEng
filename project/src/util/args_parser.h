@@ -42,6 +42,11 @@ struct Args {
     int nickRadius = 25;
     double nickK = -0.10;
     int threads = 0; // 0 = use OpenMP default
+
+    bool su = false;
+    int suRadius = 25;     // neighborhood radius r (like sauvola/nick)
+    int suNmin = 20;       // minimum edge pixels
+    double suEps = 1e-6;   // epsilon for contrast computation
 };
 
 Args parseArgs(int argc, char** argv);

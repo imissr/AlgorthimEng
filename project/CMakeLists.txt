@@ -17,6 +17,8 @@ add_library(project_lib STATIC
         src/util/timing.cpp
         src/util/logging.cpp
         src/util/args_parser.cpp
+        src/ops/threshold_su.cpp
+        src/ops/threshold_su.h
 )
 
 target_include_directories(project_lib PUBLIC

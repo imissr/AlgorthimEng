@@ -5,10 +5,6 @@
 Args parseArgs(int argc, char** argv) {
     Args a;
 
-
-    //C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --otsu --border-dark 15 0.6 --threads 8
-    // C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --sauvola 25 0.21 --threads 8
-    //C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --nick 10 -0.35 --threads 8 --border-dark 15 0.6
     if (argc < 3) {
         throw std::runtime_error(
             "Usage: enhance <input.ppm> <output.ppm> [options]\n"
@@ -27,6 +23,7 @@ Args parseArgs(int argc, char** argv) {
             "  --otsu\n"
             "  --sauvola <radius> <k>        e.g. --sauvola 25 0.34\n"
             "  --nick <radius> <k>           e.g. --nick 25 -0.10\n"
+            "  --su <radius> <Nmin> [eps]    e.g. --su 25 30 1e-6\n"   // <<< ADD
             "\n"
             "Morphology (binary):\n"
             "  --open                        open3x3 (erode then dilate)\n"
@@ -78,6 +75,26 @@ Args parseArgs(int argc, char** argv) {
             a.sauvolaRadius = std::stoi(argv[++i]);
             a.sauvolaK = std::stod(argv[++i]);
 
+        } else if (arg == "--nick") {
+            if (i + 2 >= argc) throw std::runtime_error("--nick needs: <radius> <k> (k usually -0.1)");
+            a.nick = true;
+            a.nickRadius = std::stoi(argv[++i]);
+            a.nickK = std::stod(argv[++i]);
+
+        } else if (arg == "--su") {   // <<< ADD THIS BLOCK
+            if (i + 2 >= argc) throw std::runtime_error("--su needs: <radius> <Nmin> [eps]");
+            a.su = true;
+            a.suRadius = std::stoi(argv[++i]);
+            a.suNmin   = std::stoi(argv[++i]);
+
+            // optional eps if next token is not another flag
+            if (i + 1 < argc) {
+                std::string next = argv[i + 1];
+                if (!next.empty() && next[0] != '-') {
+                    a.suEps = std::stod(argv[++i]);
+                }
+            }
+
         // -------- morphology --------
         } else if (arg == "--open") {
             a.morphOpen = true;
@@ -97,17 +114,11 @@ Args parseArgs(int argc, char** argv) {
             a.borderDarkWidth = std::stoi(argv[++i]);
             a.borderDarkThresholdFrac = std::stod(argv[++i]);
 
-        }
-     else if (arg == "--threads") {
-        if (i + 1 >= argc) throw std::runtime_error("--threads needs a value");
-        a.threads = std::stoi(argv[++i]);
-    }
-        else if (arg == "--nick") {
-            if (i + 2 >= argc) throw std::runtime_error("--nick needs: <radius> <k> (k usually -0.1)");
-            a.nick = true;
-            a.nickRadius = std::stoi(argv[++i]);
-            a.nickK = std::stod(argv[++i]);
-        }else {
+        } else if (arg == "--threads") {
+            if (i + 1 >= argc) throw std::runtime_error("--threads needs a value");
+            a.threads = std::stoi(argv[++i]);
+
+        } else {
             throw std::runtime_error("Unknown argument: " + arg);
         }
     }
@@ -115,13 +126,14 @@ Args parseArgs(int argc, char** argv) {
     int threshCount =
         (a.otsu ? 1 : 0) +
         (a.sauvola ? 1 : 0) +
-        (a.nick ? 1 : 0);
+        (a.nick ? 1 : 0) +
+        (a.su ? 1 : 0);   // <<< ADD
 
     if (threshCount > 1) {
         throw std::runtime_error(
-            "Choose only one binarization: --otsu OR --sauvola OR --nick"
+            "Choose only one binarization: --otsu OR --sauvola OR --nick OR --su" // <<< UPDATE
         );
     }
 
     return a;
-};
+}
