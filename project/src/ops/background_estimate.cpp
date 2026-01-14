@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include <omp.h>
 
 #include "src/util/clamp.h"
 
@@ -26,7 +27,7 @@ GrayImage background_estimate::boxBlurSeparable(const GrayImage& in, int radius)
     const int window = 2 * radius + 1;
 
     // Horizontal pass
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(in, tmp, w, h, radius, window)
     for (int y = 0; y < h; ++y) {
         long long sum = 0;
 
@@ -47,7 +48,7 @@ GrayImage background_estimate::boxBlurSeparable(const GrayImage& in, int radius)
     }
 
     // Vertical pass
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(tmp, out, w, h, radius, window)
     for (int x = 0; x < w; ++x) {
         long long sum = 0;
 

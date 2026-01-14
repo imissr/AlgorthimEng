@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "src/util/clamp.h"
+#include <omp.h>
 
 GrayImage contrast_stretch::apply(const GrayImage& in) {
     if (in.width <= 0 || in.height <= 0 || in.maxval <= 0)
@@ -30,8 +31,9 @@ GrayImage contrast_stretch::apply(const GrayImage& in) {
 
     const int maxval = in.maxval;
     const int range = maxv - minv;
-#pragma omp parallel for
-    for (std::size_t i = 0; i < expected; ++i) {
+    const long long n = (long long)expected;
+#pragma omp parallel for default(none) shared(in, out, n, minv, maxval, range)
+    for (std::size_t i = 0; i < n; ++i) {
         long long scaled = (long long)(in.data[i] - minv) * (long long)maxval;
         int nv = (int)(scaled / range);
         out.data[i] = clampInt(nv, 0, maxval);
@@ -91,8 +93,10 @@ GrayImage contrast_stretch::applyPercentile(const GrayImage& in,
     out.data.assign(expected, 0);
 
     const int range = hi - lo;
+    const long long n = (long long)expected;
 
-    for (std::size_t i = 0; i < expected; ++i) {
+#pragma omp parallel for default(none) shared(in, out, lo, hi, maxv, range,n)
+    for (std::size_t i = 0; i < n; ++i) {
         int v = clampInt(in.data[i], 0, maxv);
 
         // clamp into [lo..hi] first

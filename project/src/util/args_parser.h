@@ -41,6 +41,7 @@ struct Args {
     bool nick = false;
     int nickRadius = 25;
     double nickK = -0.10;
+    int threads = 0; // 0 = use OpenMP default
 };
 
 Args parseArgs(int argc, char** argv);

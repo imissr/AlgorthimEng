@@ -44,12 +44,30 @@ Args parseArgs(int argc, char** argv) {
  **/
     if (argc < 3) {
         throw std::runtime_error(
-            "Usage: enhance <input.ppm> <output.ppm> [--verbose] "
-            "[--median 1] [--bg-radius 30] [--target 0.90] "
-            "[--contrast] [--contrast-pct 1 99] "
-            "[--otsu | --sauvola <radius> <k>] "
-            "[--open] [--close] "
-            "[--border <w> | --border-dark <w> <thrFrac>]"
+            "Usage: enhance <input.ppm> <output.ppm> [options]\n"
+            "\n"
+            "Options:\n"
+            "  --verbose\n"
+            "  --threads <N>                 Set OpenMP threads (optional)\n"
+            "\n"
+            "Preprocessing:\n"
+            "  --median <0|1>                1 = median3x3, 0 = off\n"
+            "  --bg-radius <R>               background blur radius (0 = off)\n"
+            "  --target <0..1>               paper target fraction (default 0.90)\n"
+            "  --contrast-pct <low> <high>   percentile stretch (e.g. 1 99)\n"
+            "\n"
+            "Binarization (choose ONE):\n"
+            "  --otsu\n"
+            "  --sauvola <radius> <k>        e.g. --sauvola 25 0.34\n"
+            "  --nick <radius> <k>           e.g. --nick 25 -0.10\n"
+            "\n"
+            "Morphology (binary):\n"
+            "  --open                        open3x3 (erode then dilate)\n"
+            "  --close                       close3x3 (dilate then erode)\n"
+            "\n"
+            "Border cleanup:\n"
+            "  --border <w>                  whiten fixed border width\n"
+            "  --border-dark <w> <thrFrac>   whiten only dark border pixels (e.g. 15 0.6)\n"
         );
     }
 
@@ -113,6 +131,10 @@ Args parseArgs(int argc, char** argv) {
             a.borderDarkThresholdFrac = std::stod(argv[++i]);
 
         }
+     else if (arg == "--threads") {
+        if (i + 1 >= argc) throw std::runtime_error("--threads needs a value");
+        a.threads = std::stoi(argv[++i]);
+    }
         else if (arg == "--nick") {
             if (i + 2 >= argc) throw std::runtime_error("--nick needs: <radius> <k> (k usually -0.1)");
             a.nick = true;

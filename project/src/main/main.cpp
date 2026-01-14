@@ -94,6 +94,10 @@ int main(int argc, char **argv)
             result = morphology::close3x3(result);
             if (args.verbose) std::cout << "Applied morphology close3x3\n";
         }
+        if (args.threads > 0) {
+            omp_set_num_threads(args.threads);
+            if (args.verbose) std::cout << "OpenMP threads: " << args.threads << "\n";
+        }
 
         // border cleanup
         if (args.borderDark) {

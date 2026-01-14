@@ -17,6 +17,7 @@ GrayImage morphology::erode3x3(const GrayImage& in) {
 
     // Erosion for black foreground:
     // output black (0) only if ALL neighbors are black (0)
+#pragma omp parallel for default(none) shared(in, out)
     for (int y = 0; y < in.height; ++y) {
         for (int x = 0; x < in.width; ++x) {
             bool allBlack = true;
@@ -46,6 +47,7 @@ GrayImage morphology::dilate3x3(const GrayImage& in) {
 
     // Dilation for black foreground:
     // output black (0) if ANY neighbor is black (0)
+#pragma omp parallel for default(none) shared(in, out)
     for (int y = 0; y < in.height; ++y) {
         for (int x = 0; x < in.width; ++x) {
             bool anyBlack = false;

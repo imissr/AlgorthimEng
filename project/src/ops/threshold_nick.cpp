@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "src/util/clamp.h"
+#include <omp.h>
 
 
 // rectangle sum from integral image (inclusive bounds)
@@ -57,7 +58,7 @@ GrayImage threshold_nick::binarize(const GrayImage& in, int r, double k) {
 
     GrayImage out = in;
     out.data.assign(N, 0);
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(in, out, integ, integSq, w, h, r, k, maxv)
     for (int y = 0; y < h; ++y) {
         int y0 = (y - r < 0) ? 0 : (y - r);
         int y1 = (y + r >= h) ? (h - 1) : (y + r);

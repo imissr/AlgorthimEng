@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "src/util/clamp.h"
+#include <omp.h>
+
 
 
 GrayImage threshold_otsu::binarize(const GrayImage& in) {
@@ -55,6 +57,7 @@ GrayImage threshold_otsu::binarize(const GrayImage& in) {
     out.data.assign(N, 0);
 
     // Convention: <= threshold => black (0), else white (maxv)
+#pragma omp parallel for default(none) shared(in, out, maxv, bestT, N)
     for (std::size_t i = 0; i < N; ++i) {
         int v = clampInt(in.data[i], 0, maxv);
         out.data[i] = (v <= bestT) ? 0 : maxv;
