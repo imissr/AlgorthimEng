@@ -4,8 +4,9 @@
 #include <vector>
 #include <cmath>
 
-#include "src/util/clamp.h"
 #include <omp.h>
+
+#include "util/clamp.h"
 
 GrayImage contrast_stretch::apply(const GrayImage& in) {
     if (in.width <= 0 || in.height <= 0 || in.maxval <= 0)

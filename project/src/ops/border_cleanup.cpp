@@ -1,7 +1,7 @@
 #include "border_cleanup.h"
 #include <stdexcept>
 
-#include "src/util/clamp.h"
+#include "util/clamp.h"
 
 
 GrayImage border_cleanup::whitenEdges(const GrayImage& in, int borderWidth) {

@@ -1,8 +1,7 @@
 #ifndef ALGENG_THRESHOLD_OTSU_H
 #define ALGENG_THRESHOLD_OTSU_H
+#include "image/image_gray.h"
 
-
-#include "src/image/image_gray.h"
 
 class threshold_otsu {
 public:

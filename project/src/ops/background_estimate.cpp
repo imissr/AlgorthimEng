@@ -4,7 +4,7 @@
 #include <vector>
 #include <omp.h>
 
-#include "src/util/clamp.h"
+#include "util/clamp.h"
 
 
 GrayImage background_estimate::boxBlurSeparable(const GrayImage& in, int radius) {

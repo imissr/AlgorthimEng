@@ -1,7 +1,7 @@
 #ifndef ALGENG_THRESHOLD_NICK_H
 #define ALGENG_THRESHOLD_NICK_H
+#include "image/image_gray.h"
 
-#include "src/image/image_gray.h"
 
 class threshold_nick {
 public:

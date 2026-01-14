@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "src/util/clamp.h"
+#include "util/clamp.h"
 
 
 GrayImage background_remove::remove(const GrayImage& denoised,

@@ -1,45 +1,38 @@
-add_executable(project_executable
+# 1) Put all "real code" into a library (NO main.cpp)
+add_library(project_lib STATIC
         src/io/token_reader.cpp
-        src/io/token_reader.h
         src/io/ppm_reader.cpp
-        src/io/ppm_reader.h
-        src/main/main.cpp
         src/io/ppm_writer.cpp
-        src/io/ppm_writer.h
         src/image/image_gray.cpp
-        src/image/image_gray.h
         src/image/colorspace.cpp
-        src/image/colorspace.h
         src/ops/denoise_median.cpp
-        src/ops/denoise_median.h
         src/ops/background_estimate.cpp
-        src/ops/background_estimate.h
         src/ops/background_remove.cpp
-        src/ops/background_remove.h
         src/ops/contrast_stretch.cpp
-        src/ops/contrast_stretch.h
-        src/util/clamp.h
-        src/util/timing.h
+        src/ops/threshold_otsu.cpp
+        src/ops/threshold_sauvola.cpp
+        src/ops/threshold_nick.cpp
+        src/ops/morphology.cpp
+        src/ops/border_cleanup.cpp
         src/util/timing.cpp
         src/util/logging.cpp
-        src/util/logging.h
-        src/util/args_parser.h
         src/util/args_parser.cpp
-        src/ops/threshold_otsu.cpp
-        src/ops/threshold_otsu.h
-        src/ops/threshold_sauvola.cpp
-        src/ops/threshold_sauvola.h
-        src/ops/morphology.cpp
-        src/ops/morphology.h
-        src/ops/border_cleanup.cpp
-        src/ops/border_cleanup.h
-        src/ops/threshold_nick.cpp
-        src/ops/threshold_nick.h
 )
 
-target_include_directories(project_executable
-        PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(project_lib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(project_executable PRIVATE algeng_core)
+target_link_libraries(project_lib PUBLIC
+        algeng_core
+)
+
+# 2) Executable only contains main.cpp and links to the library
+add_executable(project_executable
+        src/main/main.cpp
+)
+
+target_link_libraries(project_executable PRIVATE project_lib)
+
+# 3) Tests
+add_subdirectory(tests)

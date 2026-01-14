@@ -1,7 +1,7 @@
 #ifndef ALGENG_MORPHOLOGY_H
 #define ALGENG_MORPHOLOGY_H
+#include "image/image_gray.h"
 
-#include "src/image/image_gray.h"
 
 class morphology {
 public:

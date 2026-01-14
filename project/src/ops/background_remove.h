@@ -4,7 +4,7 @@
 
 #ifndef ALGENG_BACKGROUND_REMOVE_H
 #define ALGENG_BACKGROUND_REMOVE_H
-#include "src/image/image_gray.h"
+#include "image/image_gray.h"
 
 
 class background_remove {

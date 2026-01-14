@@ -6,8 +6,9 @@
 
 #include <stdexcept>
 
-#include "src/util/clamp.h"
 #include <omp.h>
+
+#include "util/clamp.h"
 
 
 // rectangle sum from integral image (inclusive bounds)

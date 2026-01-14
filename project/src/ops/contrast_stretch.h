@@ -4,7 +4,7 @@
 
 #ifndef ALGENG_CONTRAST_STRETCH_H
 #define ALGENG_CONTRAST_STRETCH_H
-#include "src/image/image_gray.h"
+#include "image/image_gray.h"
 
 
 class contrast_stretch {

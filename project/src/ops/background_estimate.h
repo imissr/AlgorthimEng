@@ -4,7 +4,7 @@
 
 #ifndef ALGENG_BACKGROUND_ESTIMATE_H
 #define ALGENG_BACKGROUND_ESTIMATE_H
-#include "src/image/image_gray.h"
+#include "image/image_gray.h"
 
 
 class background_estimate {

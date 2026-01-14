@@ -1,8 +1,7 @@
 #ifndef ALGENG_BORDER_CLEANUP_H
 #define ALGENG_BORDER_CLEANUP_H
+#include "image/image_gray.h"
 
-
-#include "src/image/image_gray.h"
 
 class border_cleanup {
 public:

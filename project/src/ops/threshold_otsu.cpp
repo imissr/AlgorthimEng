@@ -2,9 +2,9 @@
 #include <stdexcept>
 #include <vector>
 
-#include "src/util/clamp.h"
 #include <omp.h>
 
+#include "util/clamp.h"
 
 
 GrayImage threshold_otsu::binarize(const GrayImage& in) {

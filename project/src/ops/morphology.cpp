@@ -1,7 +1,7 @@
 #include "morphology.h"
 #include <stdexcept>
 
-#include "src/util/clamp.h"
+#include "util/clamp.h"
 
 
 GrayImage morphology::erode3x3(const GrayImage& in) {

@@ -3,8 +3,8 @@
 #include <vector>
 #include <cmath>
 
-#include "src/image/image_gray.h"
-#include "src/util/clamp.h"
+#include "util/clamp.h"
+
 
 static inline long double rectSum(const std::vector<long double>& integ,
                                   int w, int h,

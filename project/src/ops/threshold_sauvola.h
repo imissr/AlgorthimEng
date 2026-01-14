@@ -2,7 +2,7 @@
 #define ALGENG_THRESHOLD_SAUVOLA_H
 
 
-#include "src/image/image_gray.h"
+#include "image/image_gray.h"
 
 class threshold_sauvola {
 public:
