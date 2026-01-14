@@ -19,7 +19,7 @@ GrayImage border_cleanup::whitenEdges(const GrayImage& in, int borderWidth) {
     int bw = borderWidth;
     if (bw * 2 >= in.width)  bw = in.width / 2;
     if (bw * 2 >= in.height) bw = in.height / 2;
-
+#pragma omp parallel for
     for (int y = 0; y < in.height; ++y) {
         for (int x = 0; x < in.width; ++x) {
             bool isBorder =
@@ -49,7 +49,7 @@ GrayImage border_cleanup::whitenDarkEdges(const GrayImage& in, int borderWidth, 
 
     int thr = (int)(thresholdFrac * (double)in.maxval);
     thr = clampInt(thr, 0, in.maxval);
-
+#pragma omp parallel for default(none) shared(in, out, bw, thr)
     for (int y = 0; y < in.height; ++y) {
         for (int x = 0; x < in.width; ++x) {
             bool isBorder =
