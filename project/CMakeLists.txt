@@ -33,6 +33,8 @@ add_executable(project_executable
         src/ops/morphology.h
         src/ops/border_cleanup.cpp
         src/ops/border_cleanup.h
+        src/ops/threshold_nick.cpp
+        src/ops/threshold_nick.h
 )
 
 target_include_directories(project_executable

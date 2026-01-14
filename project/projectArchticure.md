@@ -237,5 +237,6 @@ Remove --border ... and --border-dark ....
 Example (Otsu on, border off):
 
 AlgEng.exe in.ppm out.ppm --median 1 --bg-radius 30 --target 0.90 --contrast-pct 1 99 --otsu
+
 Example (border on, Otsu off):
 AlgEng.exe in.ppm out.ppm --median 1 --bg-radius 30 --target 0.90 --contrast-pct 1 99 --border-dark 15 0.6

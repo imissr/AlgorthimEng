@@ -12,7 +12,7 @@ GrayImage median3x3(const GrayImage& in) {
     out.data.assign((size_t)in.width * (size_t)in.height, 0);
 
     int neigh[9];
-
+#pragma omp parallel for
     for (int y = 0; y < in.height; ++y) {
         for (int x = 0; x < in.width; ++x) {
             int k = 0;

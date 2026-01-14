@@ -41,7 +41,6 @@ GrayImage threshold_sauvola::binarize(const GrayImage& in, int r, double k) {
     auto idx = [&](int x, int y) -> std::size_t {
         return (std::size_t)y * (std::size_t)(w + 1) + (std::size_t)x;
     };
-
     for (int y = 1; y <= h; ++y) {
         long double rowSum = 0.0L;
         long double rowSumSq = 0.0L;
@@ -59,6 +58,7 @@ GrayImage threshold_sauvola::binarize(const GrayImage& in, int r, double k) {
     GrayImage out = in;
     out.data.assign(N, 0);
 
+#pragma omp parallel for
     for (int y = 0; y < h; ++y) {
         int y0 = (y - r < 0) ? 0 : (y - r);
         int y1 = (y + r >= h) ? (h - 1) : (y + r);

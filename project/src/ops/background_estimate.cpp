@@ -26,6 +26,7 @@ GrayImage background_estimate::boxBlurSeparable(const GrayImage& in, int radius)
     const int window = 2 * radius + 1;
 
     // Horizontal pass
+#pragma omp parallel for
     for (int y = 0; y < h; ++y) {
         long long sum = 0;
 
@@ -46,6 +47,7 @@ GrayImage background_estimate::boxBlurSeparable(const GrayImage& in, int radius)
     }
 
     // Vertical pass
+#pragma omp parallel for
     for (int x = 0; x < w; ++x) {
         long long sum = 0;
 

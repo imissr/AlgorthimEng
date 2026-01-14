@@ -15,6 +15,7 @@
 #include "src/ops/threshold_sauvola.h"
 #include "src/ops/morphology.h"
 #include "src/ops/border_cleanup.h"
+#include "src/ops/threshold_nick.h"
 
 int main(int argc, char **argv)
 {
@@ -73,15 +74,14 @@ int main(int argc, char **argv)
 
         auto result = stretched;
 
-        // binarization (OCR)
         if (args.otsu) {
             result = threshold_otsu::binarize(result);
-            if (args.verbose) std::cout << "Applied Otsu binarization\n";
         } else if (args.sauvola) {
             result = threshold_sauvola::binarize(result, args.sauvolaRadius, args.sauvolaK);
+        } else if (args.nick) {
+            result = threshold_nick::binarize(result, args.nickRadius, args.nickK);
             if (args.verbose) {
-                std::cout << "Applied Sauvola binarization: r=" << args.sauvolaRadius
-                          << " k=" << args.sauvolaK << "\n";
+                std::cout << "Applied NICK: r=" << args.nickRadius << " k=" << args.nickK << "\n";
             }
         }
 

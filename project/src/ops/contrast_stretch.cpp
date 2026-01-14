@@ -4,11 +4,7 @@
 #include <vector>
 #include <cmath>
 
-int contrast_stretch::clampInt(int v, int lo, int hi) {
-    if (v < lo) return lo;
-    if (v > hi) return hi;
-    return v;
-}
+#include "src/util/clamp.h"
 
 GrayImage contrast_stretch::apply(const GrayImage& in) {
     if (in.width <= 0 || in.height <= 0 || in.maxval <= 0)
@@ -34,7 +30,7 @@ GrayImage contrast_stretch::apply(const GrayImage& in) {
 
     const int maxval = in.maxval;
     const int range = maxv - minv;
-
+#pragma omp parallel for
     for (std::size_t i = 0; i < expected; ++i) {
         long long scaled = (long long)(in.data[i] - minv) * (long long)maxval;
         int nv = (int)(scaled / range);

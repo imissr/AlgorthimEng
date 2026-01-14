@@ -15,8 +15,7 @@ public:
                                  double lowPct,
                                  double highPct);
 
-private:
-    static int clampInt(int v, int lo, int hi);
+
 
 };
 

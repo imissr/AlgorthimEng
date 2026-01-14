@@ -4,7 +4,44 @@
 
 Args parseArgs(int argc, char** argv) {
     Args a;
+/*
+    *--verbose
+    Print extra logs (steps, parameter values, progress).
 
+    --median 1
+    Apply a median filter. The 1 is typically the radius/window size (or “strength”). Median filtering reduces salt-and-pepper noise.
+
+    --bg-radius 30
+    Background estimation/removal using a neighborhood of radius 30 pixels (often used to correct uneven lighting/shadows).
+
+    --target 0.90
+    Target level for normalization (often “make the bright background reach ~90% intensity”).
+
+    --contrast
+    Enable contrast enhancement (some default method).
+
+    --contrast-pct 1 99
+    Contrast stretching using percentiles: map the 1st percentile to black and the 99th percentile to white (clipping extremes).
+
+    --otsu
+    Use Otsu’s thresholding (global threshold). Typically converts to black/white (binarization).
+
+    --sauvola <radius> <k>
+    Use Sauvola adaptive thresholding (local threshold).
+    radius = window radius; k = tuning factor (often around 0.2–0.5).
+
+    --open
+    Apply morphological opening (erode then dilate). Removes small bright noise / breaks thin connections.
+
+    --close
+    Apply morphological closing (dilate then erode). Fills small holes / connects nearby dark regions.
+
+    --border <w>
+    Add a border of width w pixels (often white or a default color).
+
+    --border-dark <w> <thrFrac>
+    Add a border (width w) but decide “dark vs light” based on a threshold fraction thrFrac (e.g., if edges are dark, add dark border or handle dark background scans).
+ **/
     if (argc < 3) {
         throw std::runtime_error(
             "Usage: enhance <input.ppm> <output.ppm> [--verbose] "
@@ -75,15 +112,27 @@ Args parseArgs(int argc, char** argv) {
             a.borderDarkWidth = std::stoi(argv[++i]);
             a.borderDarkThresholdFrac = std::stod(argv[++i]);
 
-        } else {
+        }
+        else if (arg == "--nick") {
+            if (i + 2 >= argc) throw std::runtime_error("--nick needs: <radius> <k> (k usually -0.1)");
+            a.nick = true;
+            a.nickRadius = std::stoi(argv[++i]);
+            a.nickK = std::stod(argv[++i]);
+        }else {
             throw std::runtime_error("Unknown argument: " + arg);
         }
     }
 
-    // prevent using both thresholds at once
-    if (a.otsu && a.sauvola) {
-        throw std::runtime_error("Choose only one binarization: --otsu OR --sauvola");
+    int threshCount =
+        (a.otsu ? 1 : 0) +
+        (a.sauvola ? 1 : 0) +
+        (a.nick ? 1 : 0);
+
+    if (threshCount > 1) {
+        throw std::runtime_error(
+            "Choose only one binarization: --otsu OR --sauvola OR --nick"
+        );
     }
 
     return a;
-}
+};

@@ -36,6 +36,11 @@ struct Args {
     bool borderDark = false;
     int borderDarkWidth = 15;
     double borderDarkThresholdFrac = 0.60; // 0..1
+
+
+    bool nick = false;
+    int nickRadius = 25;
+    double nickK = -0.10;
 };
 
 Args parseArgs(int argc, char** argv);
