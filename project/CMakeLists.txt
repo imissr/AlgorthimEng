@@ -19,6 +19,8 @@ add_library(project_lib STATIC
         src/util/args_parser.cpp
         src/ops/threshold_su.cpp
         src/ops/threshold_su.h
+        src/ops/threshold_proposed.cpp
+        src/ops/threshold_proposed.h
 )
 
 target_include_directories(project_lib PUBLIC

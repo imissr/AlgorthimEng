@@ -60,6 +60,7 @@ GrayImage threshold_sauvola::binarize(const GrayImage& in, int r, double k) {
 
 #pragma omp parallel for default(none) shared(in, out, integ, integSq, w, h, r, k, maxv, R)
     for (int y = 0; y < h; ++y) {
+
         int y0 = (y - r < 0) ? 0 : (y - r);
         int y1 = (y + r >= h) ? (h - 1) : (y + r);
 

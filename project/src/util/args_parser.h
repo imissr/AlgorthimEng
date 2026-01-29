@@ -47,6 +47,10 @@ struct Args {
     int suRadius = 25;     // neighborhood radius r (like sauvola/nick)
     int suNmin = 20;       // minimum edge pixels
     double suEps = 1e-6;   // epsilon for contrast computation
+
+
+    bool proposed = false;
+    int proposedRadius = 10;   // default r = 10 like your function default
 };
 
 Args parseArgs(int argc, char** argv);

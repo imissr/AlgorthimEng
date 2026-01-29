@@ -2,6 +2,13 @@
 #include <stdexcept>
 #include <string>
 
+
+
+//C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --otsu --border-dark 15 0.6 --threads 8
+// C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --sauvola 25 0.21 --threads 8
+//C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --nick 10 -0.35 --threads 8 --border-dark 15 0.6
+// C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --proposed 1 --border-dark 15 0.6 --threads 8 --median 1 --bg-radius 45 --contrast-pct 1 99
+
 Args parseArgs(int argc, char** argv) {
     Args a;
 
@@ -23,7 +30,8 @@ Args parseArgs(int argc, char** argv) {
             "  --otsu\n"
             "  --sauvola <radius> <k>        e.g. --sauvola 25 0.34\n"
             "  --nick <radius> <k>           e.g. --nick 25 -0.10\n"
-            "  --su <radius> <Nmin> [eps]    e.g. --su 25 30 1e-6\n"   // <<< ADD
+            "  --su <radius> <Nmin> [eps]    e.g. --su 25 30 1e-6\n"
+            "  --proposed <radius>         e.g. --proposed 10\n"
             "\n"
             "Morphology (binary):\n"
             "  --open                        open3x3 (erode then dilate)\n"
@@ -94,9 +102,15 @@ Args parseArgs(int argc, char** argv) {
                     a.suEps = std::stod(argv[++i]);
                 }
             }
+        } else if (arg == "--proposed") {
+            if (i + 1 >= argc) throw std::runtime_error("--proposed needs: <radius>");
+            a.proposed = true;
+            a.proposedRadius = std::stoi(argv[++i]);
+            if (a.proposedRadius <= 0)
+                throw std::runtime_error("--proposed radius must be > 0");
 
         // -------- morphology --------
-        } else if (arg == "--open") {
+        }else if (arg == "--open") {
             a.morphOpen = true;
 
         } else if (arg == "--close") {
@@ -127,12 +141,14 @@ Args parseArgs(int argc, char** argv) {
         (a.otsu ? 1 : 0) +
         (a.sauvola ? 1 : 0) +
         (a.nick ? 1 : 0) +
-        (a.su ? 1 : 0);   // <<< ADD
+        (a.su ? 1 : 0) +
+        (a.proposed ? 1 : 0);
 
     if (threshCount > 1) {
         throw std::runtime_error(
-            "Choose only one binarization: --otsu OR --sauvola OR --nick OR --su" // <<< UPDATE
+            "Choose only one binarization: --otsu OR --sauvola OR --nick OR --su OR --proposed"
         );
+
     }
 
     return a;

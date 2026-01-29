@@ -18,6 +18,8 @@
 #include "ops/threshold_su.h"
 #include "ops/border_cleanup.h"
 #include <omp.h>
+#include "ops/threshold_proposed.h"
+
 
 int main(int argc, char **argv)
 {
@@ -39,6 +41,12 @@ int main(int argc, char **argv)
             std::cout << "Loaded PPM: " << image.width << "x" << image.height
                       << " maxval=" << image.maxColorValue << "\n";
         }
+
+        if (args.threads > 0) {
+            omp_set_num_threads(args.threads);
+            if (args.verbose) std::cout << "OpenMP threads: " << args.threads << "\n";
+        }
+
 
         auto gray = rgbToGray(image);
 
@@ -92,6 +100,11 @@ int main(int argc, char **argv)
                           << " Nmin=" << args.suNmin
                           << " eps=" << args.suEps << "\n";
             }
+        } else if (args.proposed) {
+            result = threshold_proposed::binarize(result, args.proposedRadius);
+            if (args.verbose) {
+                std::cout << "Applied PROPOSED: r=" << args.proposedRadius << "\n";
+            }
         }
 
         // morphology (binary cleanup)
@@ -102,10 +115,6 @@ int main(int argc, char **argv)
         if (args.morphClose) {
             result = morphology::close3x3(result);
             if (args.verbose) std::cout << "Applied morphology close3x3\n";
-        }
-        if (args.threads > 0) {
-            omp_set_num_threads(args.threads);
-            if (args.verbose) std::cout << "OpenMP threads: " << args.threads << "\n";
         }
 
         // border cleanup

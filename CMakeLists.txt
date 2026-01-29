@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenMP REQUIRED)
+message(STATUS "OpenMP CXX flags: ${OpenMP_CXX_FLAGS}")
+message(STATUS "OpenMP libraries: ${OpenMP_CXX_LIBRARIES}")
 
 include(FetchContent)
 FetchContent_Declare(
