@@ -31,9 +31,6 @@ add_library(algeng_core STATIC
 target_include_directories(algeng_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(algeng_core PUBLIC OpenMP::OpenMP_CXX)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_definitions(algeng_core PUBLIC _GLIBCXX_PARALLEL)
-endif()
 
 function(add_assignment_exe exe_name source_file)
     add_executable(${exe_name} ${source_file})

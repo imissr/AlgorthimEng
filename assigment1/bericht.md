@@ -1,10 +1,4 @@
-# Bericht zur Übung: Computer Systems und OpenMP
 
-**Name:**  
-**Matrikelnummer:**  
-**Datum:**
-
----
 
 ## 1. Ausgewählte Vorlesungsfolie und Erläuterung
 
