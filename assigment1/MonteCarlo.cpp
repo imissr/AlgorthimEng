@@ -8,7 +8,7 @@ void MonteCarlo::monteCarlo(){
     int counter = 0; // Punkte im Viertelkreis
 
     double start_time = omp_get_wtime();
-    omp_set_num_threads(5);
+    omp_set_num_threads(7);
 
 #pragma omp parallel
     {
@@ -18,7 +18,7 @@ void MonteCarlo::monteCarlo(){
         uniform_real_distribution<double> zero_to_one(0.0, 1.0);
 
         int local_counter = 0; // lokaler Zähler pro Thread
-
+#pragma omp for
         for (int i = 0; i < n; ++i) {
             double x = zero_to_one(re);
             double y = zero_to_one(re);
