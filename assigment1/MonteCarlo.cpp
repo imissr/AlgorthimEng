@@ -4,11 +4,10 @@
 using namespace std;
 
 void MonteCarlo::monteCarlo(){
-    int n = 10000000; // Anzahl der Zufallspunkte
+    long long n = 10000000; // Anzahl der Zufallspunkte
     int counter = 0; // Punkte im Viertelkreis
 
     double start_time = omp_get_wtime();
-    omp_set_num_threads(7);
 
 #pragma omp parallel
     {
@@ -19,7 +18,7 @@ void MonteCarlo::monteCarlo(){
 
         int local_counter = 0; // lokaler Zähler pro Thread
 #pragma omp for
-        for (int i = 0; i < n; ++i) {
+        for (long long i = 0; i < n; ++i) {
             double x = zero_to_one(re);
             double y = zero_to_one(re);
 

@@ -10,7 +10,7 @@ double rnd(unsigned int &seed) {
 }
 
 void pi_monte_carlo_with_LCG::pi_monte_carlo_LCG() {
-    int n = 100000000000000;
+    long long n = 10000000;
     omp_set_num_threads(10);
     int counter = 0;
     double start_time = omp_get_wtime();
@@ -21,7 +21,7 @@ void pi_monte_carlo_with_LCG::pi_monte_carlo_LCG() {
         unsigned int seed = omp_get_thread_num();
 
 #pragma omp for
-        for (int i = 0; i < n; ++i) {
+        for (long long i = 0; i < n; ++i) {
             double x = rnd(seed);
             double y = rnd(seed);
             if (x * x + y * y <= 1.0) {

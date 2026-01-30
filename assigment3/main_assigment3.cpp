@@ -1,11 +1,7 @@
 #include "pi_monte_carlo_with_LCG.h"
-long fib(int n) {
-    if (n == 1)
-        return 1;
-    if (n == 2)
-        return 1;
-    return fib(n-1)+ fib(n-2);
-
+unsigned long long fib(unsigned n) {
+    if (n <= 2) return 1ULL;
+    return fib(n - 1) + fib(n - 2);
 }
 
 int main() {
@@ -25,8 +21,12 @@ int main() {
 #pragma omp parallel
     {
         int t = omp_get_thread_num();
-        printf("%d: %ld\n "  , t ,fib(n + t));
-    }
-    return 0;
+        int k = n + t;
 
+        if (k > 93) {
+            printf("%d: fib(%d) overflows 64-bit\n", t, k);
+        } else {
+            printf("%d: %llu\n", t, fib(k));
+        }
+    }
 }
