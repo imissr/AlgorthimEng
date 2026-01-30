@@ -21,9 +21,16 @@ printf(" %d", omp_get_thread_num());
 
 ```c
 #pragma omp parallel
-{
-    int t = omp_get_thread_num();
-    printf("%d: %ld\n", t, fib(n + t));
+    {
+        int t = omp_get_thread_num();
+        int k = n + t;
+
+        if (k > 93) {
+            printf("%d: fib(%d) overflows 64-bit\n", t, k);
+        } else {
+            printf("%d: %llu\n", t, fib(k));
+        }
+    }
 }
 ```
 
