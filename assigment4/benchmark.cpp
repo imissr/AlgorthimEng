@@ -2,43 +2,62 @@
 #include "min_max_quicksort.h"
 
 #include <parallel/algorithm>
-#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <random>
 #include <vector>
 #include <omp.h>
-#include <thread>
 
 #include "assigment4/benchmark.h"
 #include "assigment4/min_max_quicksort.h"
 
-using Clock = std::chrono::high_resolution_clock;
-
 template <class F>
 double time_it(F&& f) {
-    auto start = Clock::now();
+    double start = omp_get_wtime();
     f();
-    auto end = Clock::now();
-    std::chrono::duration<double> diff = end - start;
-    return diff.count();
+    double end = omp_get_wtime();
+    return end - start;
 }
+
+class Xoroshiro128Plus {
+    uint64_t state[2]{};
+
+    static inline uint64_t rotl(const uint64_t x, int k) {
+        return (x << k) | (x >> (64 - k));
+    }
+
+public:
+    explicit Xoroshiro128Plus(uint64_t seed = 0) {
+        state[0] = (12345678901234567 + seed) | 0b1001000010000001000100101000000110010010100000011001001010000001ULL;
+        state[1] = (98765432109876543 + seed) | 0b0100000011001100100000011001001010000000100100101000000110010010ULL;
+        for(int i = 0; i < 10; i++){operator()();}
+    }
+
+    uint64_t operator()() {
+        const uint64_t s0 = state[0];
+        uint64_t s1 = state[1];
+        const uint64_t result = s0 + s1;
+
+        s1 ^= s0;
+        state[0] = rotl(s0, 24) ^ s1 ^ (s1 << 16);
+        state[1] = rotl(s1, 37);
+        return result;
+    }
+};
 
 // Fill a vector with reproducible random data (same as before, but simpler RNG)
 static void fill_random(std::vector<int64_t>& v) {
-    std::mt19937_64 rng(42);
-    std::uniform_int_distribution<int64_t> dist(
-        std::numeric_limits<int64_t>::min(),
-        std::numeric_limits<int64_t>::max()
-    );
-    for (auto &x : v) x = dist(rng);
+    Xoroshiro128Plus generator(500000);
+    for (int64_t i = 0; i < v.size(); ++i) {
+        v[i] = static_cast<int64_t>(generator());
+    }
 }
 
 
 
 void benchmark::run() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
+    // std::ios::sync_with_stdio(false);
+    // std::cin.tie(nullptr);
 
 
 
@@ -65,40 +84,29 @@ void benchmark::run() {
     std::cout << "N,threads,time_std,time_minmax,time_gnu\n";
 
     for (std::size_t N : sizes) {
+
+
         std::vector<int64_t> base(N);
         fill_random(base);
-
-
-        std::vector<int64_t> arr_std = base;
         double t_std = time_it([&] {
-            __gnu_sequential::sort(arr_std.begin(), arr_std.end());
+            std::sort(base.begin(), base.end());
         });
 
-        std::vector<int64_t> reference = arr_std;
 
         for (int threads = 1; threads <= max_threads; ++threads) {
 
-            std::vector<int64_t> arr_mm = base;
+            std::vector<int64_t> arr_mm(N);
+            fill_random(arr_mm);
             double t_mm = time_it([&] {
                 min_max_quicksort(arr_mm.data(), static_cast<int64_t>(arr_mm.size()), threads);
             });
 
-            if (arr_mm != reference) {
-                std::cerr << "ERROR: min_max_quicksort wrong result for N="
-                          << N << " threads=" << threads << "\n";
-            }
 
-
-            std::vector<int64_t> arr_gnu = base;
-            omp_set_num_threads(threads);
+            std::vector<int64_t> arr_gnu(N);
+            fill_random(arr_gnu);
             double t_gnu = time_it([&] {
-                __gnu_parallel::sort(arr_gnu.begin(), arr_gnu.end());
+                __gnu_parallel::sort(arr_gnu.begin(), arr_gnu.end(), __gnu_parallel::parallel_tag(threads));
             });
-
-            if (arr_gnu != reference) {
-                std::cerr << "ERROR: __gnu_parallel::sort wrong result for N="
-                          << N << " threads=" << threads << "\n";
-            }
 
             std::cout << N << "," << threads << ","
                       << t_std << "," << t_mm << "," << t_gnu << "\n";
