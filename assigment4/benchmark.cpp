@@ -11,14 +11,6 @@
 #include "assigment4/benchmark.h"
 #include "assigment4/min_max_quicksort.h"
 
-template <class F>
-double time_it(F&& f) {
-    double start = omp_get_wtime();
-    f();
-    double end = omp_get_wtime();
-    return end - start;
-}
-
 class Xoroshiro128Plus {
     uint64_t state[2]{};
 
@@ -44,6 +36,19 @@ public:
         return result;
     }
 };
+
+
+
+
+template <class F>
+double time_it(F&& f) {
+    double start = omp_get_wtime();
+    f();
+    double end = omp_get_wtime();
+    return end - start;
+}
+
+
 
 // Fill a vector with reproducible random data (same as before, but simpler RNG)
 static void fill_random(std::vector<int64_t>& v) {

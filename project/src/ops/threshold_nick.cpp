@@ -4,6 +4,7 @@
 
 #include "threshold_nick.h"
 
+#include <cmath>
 #include <stdexcept>
 
 #include <omp.h>
