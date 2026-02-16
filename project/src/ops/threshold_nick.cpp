@@ -81,7 +81,7 @@ GrayImage threshold_nick::binarize(const GrayImage& in, int r, double k) {
             long double var = secondMoment - mean * mean;
             if (var < 0.0L) var = 0.0L;
 
-            long double stddev = std::sqrt((double)var);
+            long double stddev = sqrtl(var);
 
             // NICK: T = m + k * stddev   (k negative shifts threshold down)
             long double T = mean + (long double)k * stddev;

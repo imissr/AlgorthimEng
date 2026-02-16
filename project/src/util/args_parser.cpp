@@ -89,13 +89,12 @@ Args parseArgs(int argc, char** argv) {
             a.nickRadius = std::stoi(argv[++i]);
             a.nickK = std::stod(argv[++i]);
 
-        } else if (arg == "--su") {   // <<< ADD THIS BLOCK
+        } else if (arg == "--su") {
             if (i + 2 >= argc) throw std::runtime_error("--su needs: <radius> <Nmin> [eps]");
             a.su = true;
             a.suRadius = std::stoi(argv[++i]);
             a.suNmin   = std::stoi(argv[++i]);
 
-            // optional eps if next token is not another flag
             if (i + 1 < argc) {
                 std::string next = argv[i + 1];
                 if (!next.empty() && next[0] != '-') {

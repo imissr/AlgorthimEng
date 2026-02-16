@@ -141,18 +141,25 @@ AlgorthimEng/
 --border-dark <width> <thrFrac>  # Whiten only dark border pixels
                                 # Example: --border-dark 15 0.6
 ```
+window size=(2r+1)×(2r+1) !! and r ist the radius
+2r+1=15
+r = 7
+
 
 ### Complete Example Usage:
 ```bash
 # Basic Otsu thresholding
 ./project/project_executable input.ppm output.ppm --otsu
 
+
+
 # Advanced pipeline with all preprocessing steps
+# windows size = 2r+1 = 15 and R is fixed at 125 dynamic range of standard deviation
 ./project/project_executable input.ppm output.ppm \
     --median 1 \
     --bg-radius 45 \
     --contrast-pct 1 99 \
-    --sauvola 25 0.21 \
+    --sauvola 7 0.20 \
     --open \
     --border-dark 15 0.6 \
     --threads 8 \
@@ -161,7 +168,7 @@ AlgorthimEng/
 # NICK thresholding with morphology
 ./project/project_executable input.ppm output.ppm \
     --median 1 \
-    --nick 10 -0.35 \
+    --nick 9 -0.1 \
     --close \
     --border-dark 15 0.6 \
     --threads 8

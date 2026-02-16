@@ -32,7 +32,7 @@ GrayImage threshold_sauvola::binarize(const GrayImage& in, int r, double k) {
     const int w = in.width;
     const int h = in.height;
     const int maxv = in.maxval;
-    const long double R = (long double)maxv; // dynamic range
+    const long double R = 125.0L;
 
     // Build integral images for sum and sum of squares
     std::vector<long double> integ((std::size_t)(w + 1) * (std::size_t)(h + 1), 0.0L);
@@ -77,7 +77,7 @@ GrayImage threshold_sauvola::binarize(const GrayImage& in, int r, double k) {
             long double meanSq = sumSq / (long double)area;
             long double var = meanSq - mean * mean;
             if (var < 0.0L) var = 0.0L;
-            long double stddev = std::sqrt((double)var);
+            long double stddev = sqrtl(var);
 
             // Sauvola threshold
             long double T = mean * (1.0L + (long double)k * ((stddev / R) - 1.0L));
