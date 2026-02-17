@@ -13,6 +13,7 @@
 
 
 // rectangle sum from integral image (inclusive bounds)
+//returns the total brightness / total intensity inside the rectangle
 static inline long double rectSum(const std::vector<long double>& integ,
                                  int w, int h,
                                  int x0, int y0, int x1, int y1) {
