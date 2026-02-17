@@ -54,9 +54,6 @@ The chapter emphasizes that a computer ultimately operates only on **bit pattern
   - pointers,
   - machine-level code.
 
-**In short:**
-
-> I found the statement “Information is bits + context” particularly interesting. The hardware only knows bit patterns; whether they represent an integer, a float, or a character depends entirely on how the program interprets them. This explains why many errors do not produce immediate error messages but instead result in nonsensical values.
 
 ---
 
