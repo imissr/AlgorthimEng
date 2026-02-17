@@ -3,15 +3,16 @@
 
 #include <string>
 
-struct Args {
+struct Args
+{
     std::string input;
     std::string output;
 
     bool verbose = false;
 
-    int medianRadius = 0;        // 0 = off, 1 = 3x3
-    int bgRadius = 0;            // 0 = off
-    double targetPaper = 0.90;   // fraction of maxval
+    int medianRadius = 0;      // 0 = off, 1 = 3x3
+    int bgRadius = 0;          // 0 = off
+    double targetPaper = 0.90; // fraction of maxval
 
     bool contrast = false;
     bool contrastPercentile = false;
@@ -22,8 +23,8 @@ struct Args {
     bool otsu = false;
 
     bool sauvola = false;
-    int sauvolaRadius = 25;      // typical 15..30
-    double sauvolaK = 0.34;      // typical 0.2..0.5
+    int sauvolaRadius = 25; // typical 15..30
+    double sauvolaK = 0.34; // typical 0.2..0.5
 
     // ---- morphology (binary) ----
     bool morphOpen = false;
@@ -37,22 +38,20 @@ struct Args {
     int borderDarkWidth = 15;
     double borderDarkThresholdFrac = 0.60; // 0..1
 
-
     bool nick = false;
     int nickRadius = 25;
     double nickK = -0.10;
     int threads = 0; // 0 = use OpenMP default
 
     bool su = false;
-    int suRadius = 25;     // neighborhood radius r (like sauvola/nick)
-    int suNmin = 20;       // minimum edge pixels
-    double suEps = 1e-6;   // epsilon for contrast computation
-
+    int suRadius = 0;    // 0 = auto (stroke-width estimation)
+    int suNmin = 0;      // 0 = auto (stroke-width estimation)
+    double suEps = 1e-6; // epsilon for contrast computation
 
     bool proposed = false;
-    int proposedRadius = 10;   // default r = 10 like your function default
+    int proposedRadius = 10; // default r = 10 like your function default
 };
 
-Args parseArgs(int argc, char** argv);
+Args parseArgs(int argc, char **argv);
 
 #endif

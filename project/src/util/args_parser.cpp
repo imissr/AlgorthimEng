@@ -2,17 +2,17 @@
 #include <stdexcept>
 #include <string>
 
+// C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --otsu --border-dark 15 0.6 --threads 8
+//  C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --sauvola 25 0.21 --threads 8
+// C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --nick 10 -0.35 --threads 8 --border-dark 15 0.6
+//  C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --proposed 1 --border-dark 15 0.6 --threads 8 --median 1 --bg-radius 45 --contrast-pct 1 99
 
-
-//C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --otsu --border-dark 15 0.6 --threads 8
-// C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --bg-radius 45 --contrast-pct 1 99 --sauvola 25 0.21 --threads 8
-//C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --median 1 --nick 10 -0.35 --threads 8 --border-dark 15 0.6
-// C:\Users\khale\CLionProjects\AlgEng\project\data\in.ppm C:\Users\khale\CLionProjects\AlgEng\project\data\out.ppm --proposed 1 --border-dark 15 0.6 --threads 8 --median 1 --bg-radius 45 --contrast-pct 1 99
-
-Args parseArgs(int argc, char** argv) {
+Args parseArgs(int argc, char **argv)
+{
     Args a;
 
-    if (argc < 3) {
+    if (argc < 3)
+    {
         throw std::runtime_error(
             "Usage: enhance <input.ppm> <output.ppm> [options]\n"
             "\n"
@@ -30,7 +30,7 @@ Args parseArgs(int argc, char** argv) {
             "  --otsu\n"
             "  --sauvola <radius> <k>        e.g. --sauvola 25 0.34\n"
             "  --nick <radius> <k>           e.g. --nick 25 -0.10\n"
-            "  --su <radius> <Nmin> [eps]    e.g. --su 25 30 1e-6\n"
+            "  --su [radius Nmin [eps]]      auto or e.g. --su 25 30 1e-6\n"
             "  --proposed <radius>         e.g. --proposed 10\n"
             "\n"
             "Morphology (binary):\n"
@@ -39,99 +39,144 @@ Args parseArgs(int argc, char** argv) {
             "\n"
             "Border cleanup:\n"
             "  --border <w>                  whiten fixed border width\n"
-            "  --border-dark <w> <thrFrac>   whiten only dark border pixels (e.g. 15 0.6)\n"
-        );
+            "  --border-dark <w> <thrFrac>   whiten only dark border pixels (e.g. 15 0.6)\n");
     }
 
     a.input = argv[1];
     a.output = argv[2];
 
-    for (int i = 3; i < argc; ++i) {
+    for (int i = 3; i < argc; ++i)
+    {
         std::string arg = argv[i];
 
-        if (arg == "--verbose") {
+        if (arg == "--verbose")
+        {
             a.verbose = true;
-
-        } else if (arg == "--median") {
-            if (i + 1 >= argc) throw std::runtime_error("--median needs a value");
+        }
+        else if (arg == "--median")
+        {
+            if (i + 1 >= argc)
+                throw std::runtime_error("--median needs a value");
             a.medianRadius = std::stoi(argv[++i]);
-
-        } else if (arg == "--bg-radius") {
-            if (i + 1 >= argc) throw std::runtime_error("--bg-radius needs a value");
+        }
+        else if (arg == "--bg-radius")
+        {
+            if (i + 1 >= argc)
+                throw std::runtime_error("--bg-radius needs a value");
             a.bgRadius = std::stoi(argv[++i]);
-
-        } else if (arg == "--target") {
-            if (i + 1 >= argc) throw std::runtime_error("--target needs a value (e.g. 0.90)");
+        }
+        else if (arg == "--target")
+        {
+            if (i + 1 >= argc)
+                throw std::runtime_error("--target needs a value (e.g. 0.90)");
             a.targetPaper = std::stod(argv[++i]);
-
-        } else if (arg == "--contrast") {
+        }
+        else if (arg == "--contrast")
+        {
             a.contrast = true;
-
-        } else if (arg == "--contrast-pct") {
-            if (i + 2 >= argc) throw std::runtime_error("--contrast-pct needs two values");
+        }
+        else if (arg == "--contrast-pct")
+        {
+            if (i + 2 >= argc)
+                throw std::runtime_error("--contrast-pct needs two values");
             a.contrastPercentile = true;
             a.lowPct = std::stod(argv[++i]);
             a.highPct = std::stod(argv[++i]);
 
-        // -------- OCR / binarization --------
-        } else if (arg == "--otsu") {
+            // -------- OCR / binarization --------
+        }
+        else if (arg == "--otsu")
+        {
             a.otsu = true;
-
-        } else if (arg == "--sauvola") {
-            if (i + 2 >= argc) throw std::runtime_error("--sauvola needs: <radius> <k>");
+        }
+        else if (arg == "--sauvola")
+        {
+            if (i + 2 >= argc)
+                throw std::runtime_error("--sauvola needs: <radius> <k>");
             a.sauvola = true;
             a.sauvolaRadius = std::stoi(argv[++i]);
             a.sauvolaK = std::stod(argv[++i]);
-
-        } else if (arg == "--nick") {
-            if (i + 2 >= argc) throw std::runtime_error("--nick needs: <radius> <k> (k usually -0.1)");
+        }
+        else if (arg == "--nick")
+        {
+            if (i + 2 >= argc)
+                throw std::runtime_error("--nick needs: <radius> <k> (k usually -0.1)");
             a.nick = true;
             a.nickRadius = std::stoi(argv[++i]);
             a.nickK = std::stod(argv[++i]);
-
-        } else if (arg == "--su") {
-            if (i + 2 >= argc) throw std::runtime_error("--su needs: <radius> <Nmin> [eps]");
+        }
+        else if (arg == "--su")
+        {
             a.su = true;
-            a.suRadius = std::stoi(argv[++i]);
-            a.suNmin   = std::stoi(argv[++i]);
+            // optional: <radius> <Nmin> [eps]  — if omitted, auto stroke-width estimation
+            if (i + 2 < argc)
+            {
+                std::string p1 = argv[i + 1];
+                std::string p2 = argv[i + 2];
+                bool p1Num = !p1.empty() && (std::isdigit((unsigned char)p1[0]) || p1[0] == '-');
+                bool p2Num = !p2.empty() && (std::isdigit((unsigned char)p2[0]) || p2[0] == '-');
+                if (p1Num && p2Num)
+                {
+                    a.suRadius = std::stoi(argv[++i]);
+                    a.suNmin = std::stoi(argv[++i]);
 
-            if (i + 1 < argc) {
-                std::string next = argv[i + 1];
-                if (!next.empty() && next[0] != '-') {
-                    a.suEps = std::stod(argv[++i]);
+                    // optional eps
+                    if (i + 1 < argc)
+                    {
+                        std::string next = argv[i + 1];
+                        bool nextNum = !next.empty() && (std::isdigit((unsigned char)next[0]) || next[0] == '.');
+                        if (nextNum)
+                        {
+                            a.suEps = std::stod(argv[++i]);
+                        }
+                    }
                 }
             }
-        } else if (arg == "--proposed") {
-            if (i + 1 >= argc) throw std::runtime_error("--proposed needs: <radius>");
+        }
+        else if (arg == "--proposed")
+        {
+            if (i + 1 >= argc)
+                throw std::runtime_error("--proposed needs: <radius>");
             a.proposed = true;
             a.proposedRadius = std::stoi(argv[++i]);
             if (a.proposedRadius <= 0)
                 throw std::runtime_error("--proposed radius must be > 0");
 
-        // -------- morphology --------
-        }else if (arg == "--open") {
+            // -------- morphology --------
+        }
+        else if (arg == "--open")
+        {
             a.morphOpen = true;
-
-        } else if (arg == "--close") {
+        }
+        else if (arg == "--close")
+        {
             a.morphClose = true;
 
-        // -------- border cleanup --------
-        } else if (arg == "--border") {
-            if (i + 1 >= argc) throw std::runtime_error("--border needs: <width>");
+            // -------- border cleanup --------
+        }
+        else if (arg == "--border")
+        {
+            if (i + 1 >= argc)
+                throw std::runtime_error("--border needs: <width>");
             a.border = true;
             a.borderWidth = std::stoi(argv[++i]);
-
-        } else if (arg == "--border-dark") {
-            if (i + 2 >= argc) throw std::runtime_error("--border-dark needs: <width> <thrFrac>");
+        }
+        else if (arg == "--border-dark")
+        {
+            if (i + 2 >= argc)
+                throw std::runtime_error("--border-dark needs: <width> <thrFrac>");
             a.borderDark = true;
             a.borderDarkWidth = std::stoi(argv[++i]);
             a.borderDarkThresholdFrac = std::stod(argv[++i]);
-
-        } else if (arg == "--threads") {
-            if (i + 1 >= argc) throw std::runtime_error("--threads needs a value");
+        }
+        else if (arg == "--threads")
+        {
+            if (i + 1 >= argc)
+                throw std::runtime_error("--threads needs a value");
             a.threads = std::stoi(argv[++i]);
-
-        } else {
+        }
+        else
+        {
             throw std::runtime_error("Unknown argument: " + arg);
         }
     }
@@ -143,11 +188,10 @@ Args parseArgs(int argc, char** argv) {
         (a.su ? 1 : 0) +
         (a.proposed ? 1 : 0);
 
-    if (threshCount > 1) {
+    if (threshCount > 1)
+    {
         throw std::runtime_error(
-            "Choose only one binarization: --otsu OR --sauvola OR --nick OR --su OR --proposed"
-        );
-
+            "Choose only one binarization: --otsu OR --sauvola OR --nick OR --su OR --proposed");
     }
 
     return a;

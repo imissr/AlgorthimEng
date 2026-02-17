@@ -1,7 +1,13 @@
-// threshold_proposed.cpp  (RAW-intensity stabilized version)
-// Computes Eq. (4)(5)(6) on RAW intensities [0..maxval] instead of [0..1].
-// This prevents sigma values from becoming extremely tiny, which makes the
-// denominator in Eq. (4) collapse and forces T negative (=> clamped to 0 => all white).
+// threshold_proposed.cpp  (UNIT-CONSISTENT HYBRID)
+//
+// Goal:
+// - Keep mW, mg, sW in RAW scale [0..maxv] (so behavior stays “strong” like your RAW version)
+// - Still use sigmaAdaptive in [0,1] BUT convert it back into RAW units before combining with sW
+//
+// Key change:
+//   b = (sigmaAdaptive * sigmaMax) + sW;   // RAW + RAW  (unit-consistent)
+//
+// Everything else follows Eq (4)(5)(6) from the paper, but computed on RAW intensities.
 
 #include "threshold_proposed.h"
 
@@ -16,8 +22,9 @@
 
 #include "util/clamp.h"
 
+// Integral-image rectangle sum (inclusive coords x0..x1, y0..y1)
 static inline long double rectSum(const std::vector<long double>& integ,
-                                  int w, int /*h*/,
+                                  int w,
                                   int x0, int y0, int x1, int y1) {
     auto atI = [&](int x, int y) -> long double {
         return integ[(std::size_t)y * (std::size_t)(w + 1) + (std::size_t)x];
@@ -66,21 +73,23 @@ GrayImage threshold_proposed::binarize(const GrayImage& in, int r) {
         }
     }
 
-    const long double sumAll = rectSum(integ, w, h, 0, 0, w - 1, h - 1);
-    const long double mg = sumAll / (long double)N; // RAW mean
+    // Global mean mg (RAW)
+    const long double sumAll = rectSum(integ, w, 0, 0, w - 1, h - 1);
+    const long double mg = sumAll / (long double)N;
 
-    // First pass: sigmaW + sigmaMinNonZero/sigmaMax
+    std::cerr << std::fixed << std::setprecision(12);
+    std::cerr << "\n=== Proposed Threshold (Unit-consistent HYBRID) Sanity Check ===\n";
+    std::cerr << "Image: " << w << "x" << h << "  maxval=" << maxv
+              << "  r=" << r << " (window=" << (2 * r + 1) << "x" << (2 * r + 1) << ")\n";
+    std::cerr << "mg (RAW)            = " << (double)mg << "\n";
+
+    // First pass: compute sigmaW + sigmaMin/sigmaMax across all windows
     std::vector<long double> sigmaW(N, 0.0L);
 
-    const long double INF = std::numeric_limits<long double>::max();
-    long double sigmaMinNonZero = INF;
+    long double sigmaMin = std::numeric_limits<long double>::max();
     long double sigmaMax = std::numeric_limits<long double>::lowest();
 
-    // EPS in RAW scale: 1e-12 is too tiny; use something meaningful for RAW.
-    // 1e-6 is still “almost zero” but avoids denoms that go to 0.
-    const long double EPS = 1e-6L;
-
-#pragma omp parallel for default(none) shared(integ, integSq, sigmaW, w, h, r) reduction(min:sigmaMinNonZero) reduction(max:sigmaMax)
+#pragma omp parallel for default(none) shared(integ, integSq, sigmaW, w, h, r) reduction(min:sigmaMin) reduction(max:sigmaMax)
     for (int y = 0; y < h; ++y) {
         const int y0 = (y - r < 0) ? 0 : (y - r);
         const int y1 = (y + r >= h) ? (h - 1) : (y + r);
@@ -90,8 +99,8 @@ GrayImage threshold_proposed::binarize(const GrayImage& in, int r) {
             const int x1 = (x + r >= w) ? (w - 1) : (x + r);
             const int area = (x1 - x0 + 1) * (y1 - y0 + 1);
 
-            const long double sum   = rectSum(integ,   w, h, x0, y0, x1, y1);
-            const long double sumSq = rectSum(integSq, w, h, x0, y0, x1, y1);
+            const long double sum   = rectSum(integ,   w, x0, y0, x1, y1);
+            const long double sumSq = rectSum(integSq, w, x0, y0, x1, y1);
 
             const long double mW = sum / (long double)area;
             const long double secondMoment = sumSq / (long double)area;
@@ -104,54 +113,37 @@ GrayImage threshold_proposed::binarize(const GrayImage& in, int r) {
             const std::size_t i = (std::size_t)y * (std::size_t)w + (std::size_t)x;
             sigmaW[i] = sW;
 
-            if (sW > EPS && sW < sigmaMinNonZero) sigmaMinNonZero = sW;
+            if (sW < sigmaMin) sigmaMin = sW;
             if (sW > sigmaMax) sigmaMax = sW;
         }
     }
 
-    if (sigmaMinNonZero == INF) sigmaMinNonZero = 0.0L;
-    const long double sigmaRange = sigmaMax - sigmaMinNonZero;
+    const long double EPS = 1e-9L;
+    const long double sigmaRange = sigmaMax - sigmaMin;
 
-    // --- SANITY CHECK (after first pass) ---
-    long double sigmaW_min = std::numeric_limits<long double>::max();
-    long double sigmaW_max = std::numeric_limits<long double>::lowest();
-
-#pragma omp parallel for default(none) shared(sigmaW, w, h) reduction(min:sigmaW_min) reduction(max:sigmaW_max)
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            const std::size_t i = (std::size_t)y * (std::size_t)w + (std::size_t)x;
-            const long double s = sigmaW[i];
-            if (s < sigmaW_min) sigmaW_min = s;
-            if (s > sigmaW_max) sigmaW_max = s;
-        }
-    }
-
-    std::cerr << std::fixed << std::setprecision(12);
-    std::cerr << "\n=== Proposed Threshold (RAW): Sanity Check ===\n";
-    std::cerr << "Image: " << w << "x" << h << "  maxval=" << maxv << "  r=" << r
-              << " (window=" << (2 * r + 1) << "x" << (2 * r + 1) << ")\n";
-    std::cerr << "mg (RAW)           = " << (double)mg << "\n";
-    std::cerr << "sigmaMinNonZero    = " << (double)sigmaMinNonZero << "\n";
-    std::cerr << "sigmaMax           = " << (double)sigmaMax << "\n";
-    std::cerr << "sigmaRange         = " << (double)sigmaRange << "\n";
-    std::cerr << "sigmaW min/max     = " << (double)sigmaW_min << " / " << (double)sigmaW_max << "\n";
+    std::cerr << "sigmaMin (RAW)      = " << (double)sigmaMin << "\n";
+    std::cerr << "sigmaMax (RAW)      = " << (double)sigmaMax << "\n";
+    std::cerr << "sigmaRange (RAW)    = " << (double)sigmaRange << "\n";
 
     GrayImage out = in;
     out.data.assign(N, 0);
 
-    // Second pass
+    // Stats
     long double T_min = std::numeric_limits<long double>::max();
     long double T_max = std::numeric_limits<long double>::lowest();
+    long double sa_min = std::numeric_limits<long double>::max();
+    long double sa_max = std::numeric_limits<long double>::lowest();
     std::uint64_t blackCount = 0;
     std::uint64_t whiteCount = 0;
-    std::uint64_t clampedLo = 0;
-    std::uint64_t clampedHi = 0;
+    std::uint64_t denomClampA = 0;
+    std::uint64_t denomClampB = 0;
+    std::uint64_t ToutOfRange = 0;
 
 #pragma omp parallel for default(none) \
-shared(in, out, integ, sigmaW, w, h, r, maxv, mg, sigmaMinNonZero) \
-firstprivate(sigmaRange, EPS) \
-reduction(min:T_min) reduction(max:T_max) \
-reduction(+:blackCount, whiteCount, clampedLo, clampedHi)
+shared(in, out, integ, sigmaW, w, h, r, maxv, mg, sigmaMin, sigmaMax, sigmaRange) \
+firstprivate(EPS) \
+reduction(min:T_min, sa_min) reduction(max:T_max, sa_max) \
+reduction(+:blackCount, whiteCount, denomClampA, denomClampB, ToutOfRange)
     for (int y = 0; y < h; ++y) {
         const int y0 = (y - r < 0) ? 0 : (y - r);
         const int y1 = (y + r >= h) ? (h - 1) : (y + r);
@@ -161,58 +153,63 @@ reduction(+:blackCount, whiteCount, clampedLo, clampedHi)
             const int x1 = (x + r >= w) ? (w - 1) : (x + r);
             const int area = (x1 - x0 + 1) * (y1 - y0 + 1);
 
-            const long double sum = rectSum(integ, w, h, x0, y0, x1, y1);
+            const long double sum = rectSum(integ, w, x0, y0, x1, y1);
             const long double mW  = sum / (long double)area;
 
             const std::size_t i = (std::size_t)y * (std::size_t)w + (std::size_t)x;
             const long double sW = sigmaW[i];
 
-            // Eq (5): sigmaAdaptive in [0,1] (RAW scale still fine because it's normalized by range)
+            // Eq (5): sigmaAdaptive in [0,1]
             long double sigmaAdaptive = 0.0L;
             if (sigmaRange > EPS) {
-                sigmaAdaptive = (sW - sigmaMinNonZero) / sigmaRange;
+                sigmaAdaptive = (sW - sigmaMin) / sigmaRange;
                 if (sigmaAdaptive < 0.0L) sigmaAdaptive = 0.0L;
                 if (sigmaAdaptive > 1.0L) sigmaAdaptive = 1.0L;
             }
 
-            // Eq (4) denominator factors (avoid collapse)
-            long double a = mg + sW;
-            long double b = sigmaAdaptive + sW;
-            if (a <= EPS) a = EPS;
-            if (b <= EPS) b = EPS;
-            const long double denom = a * b;
+            // Unit-consistent hybrid:
+            // Convert sigmaAdaptive back to RAW "sigma-like" magnitude before adding to sW.
+            // (0..1) * sigmaMax gives a RAW-scale term.
+            const long double sigmaAdaptiveRaw = sigmaAdaptive * sigmaMax;
 
-            // Eq (4) as written in the paper:
-            // T = mW - (mW^2 - sigmaW) / ((mg + sigmaW) * (sigmaAdaptive + sigmaW))
-            long double T = mW - (((mW * mW) - sW) / denom);
+            // Eq (4): T = mW - (mW^2 - σW) / ((mg + σW) * (σAdaptive + σW))
+            long double a = mg + sW;                       // RAW
+            long double b = sigmaAdaptiveRaw + sW;         // RAW (unit-consistent)
+            if (a <= EPS) { a = EPS; denomClampA++; }
+            if (b <= EPS) { b = EPS; denomClampB++; }
 
-            // Clamp T to RAW range
-            if (T < 0.0L) { T = 0.0L; clampedLo++; }
-            if (T > (long double)maxv) { T = (long double)maxv; clampedHi++; }
+            long double T = mW - (((mW * mW) - sW) / (a * b)); // RAW
 
-            if (T < T_min) T_min = T;
-            if (T > T_max) T_max = T;
+            if (T < 0.0L || T > (long double)maxv) ToutOfRange++;
+
+            if (T < 0.0L) T = 0.0L;
+            if (T > (long double)maxv) T = (long double)maxv;
 
             const int iv = clampInt(in.at(x, y), 0, maxv);
             const long double p = (long double)iv;
 
-            // Eq (6): black if i(x,y) < Tw else white
-            const bool isBlack = (p < T);
-            out.at(x, y) = isBlack ? 0 : maxv;
-            if (isBlack) blackCount++; else whiteCount++;
+            out.at(x, y) = (p < T) ? 0 : maxv;
+
+            if (p < T) blackCount++; else whiteCount++;
+
+            if (T < T_min) T_min = T;
+            if (T > T_max) T_max = T;
+            if (sigmaAdaptive < sa_min) sa_min = sigmaAdaptive;
+            if (sigmaAdaptive > sa_max) sa_max = sigmaAdaptive;
         }
     }
 
-    // --- SANITY CHECK (after second pass) ---
-    std::cerr << "T min/max (RAW)    = " << (double)T_min << " / " << (double)T_max << "\n";
-    std::cerr << "clamped low count  = " << clampedLo << "\n";
-    std::cerr << "clamped high count = " << clampedHi << "\n";
-    std::cerr << "black pixels       = " << blackCount << "\n";
-    std::cerr << "white pixels       = " << whiteCount << "\n";
-    std::cerr << "black ratio        = "
+    std::cerr << "sigmaAdaptive min/max = " << (double)sa_min << " / " << (double)sa_max << "\n";
+    std::cerr << "T min/max (RAW)       = " << (double)T_min << " / " << (double)T_max << "\n";
+    std::cerr << "denom clamp (a)       = " << denomClampA << "\n";
+    std::cerr << "denom clamp (b)       = " << denomClampB << "\n";
+    std::cerr << "T out-of-range cnt    = " << ToutOfRange << "\n";
+    std::cerr << "black pixels          = " << blackCount << "\n";
+    std::cerr << "white pixels          = " << whiteCount << "\n";
+    std::cerr << "black ratio           = "
               << ((blackCount + whiteCount) ? (double)blackCount / (double)(blackCount + whiteCount) : 0.0)
               << "\n";
-    std::cerr << "========================================\n\n";
+    std::cerr << "===============================================\n\n";
 
     return out;
 }
