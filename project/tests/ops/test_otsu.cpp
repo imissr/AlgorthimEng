@@ -1,11 +1,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "project/src/image/image_gray.h"
-#include "project/src/ops/threshold_otsu.h"
+#include "image/image_gray.h"
+#include "ops/threshold_otsu.h"
 
-
-TEST_CASE("Otsu: simple bimodal image is separated correctly", "[otsu]") {
+TEST_CASE("Otsu: simple bimodal image is separated correctly", "[otsu]")
+{
     GrayImage img;
     img.width = 4;
     img.height = 1;
@@ -26,7 +26,8 @@ TEST_CASE("Otsu: simple bimodal image is separated correctly", "[otsu]") {
     REQUIRE(bw.data[3] == 255);
 }
 
-TEST_CASE("Otsu: constant image stays all white (or all black depending on rule)", "[otsu]") {
+TEST_CASE("Otsu: constant image stays all white (or all black depending on rule)", "[otsu]")
+{
     GrayImage img;
     img.width = 3;
     img.height = 3;
@@ -40,7 +41,8 @@ TEST_CASE("Otsu: constant image stays all white (or all black depending on rule)
     // Your current implementation picks bestT=0 for constant hist (often),
     // so 120 > 0 => white (255).
     // If you later change behavior, adjust this expectation.
-    for (int v : bw.data) {
+    for (int v : bw.data)
+    {
         REQUIRE(v == 255);
     }
 }
