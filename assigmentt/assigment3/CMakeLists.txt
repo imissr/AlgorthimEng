@@ -14,6 +14,9 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -fopenmp)
 endif()
 
+find_package(OpenMP REQUIRED)
+
+
 # Assignment 3 executable
 add_executable(main_assigment3 main_assigment3.cpp pi_monte_carlo_with_LCG.cpp)
 if(NOT MSVC)

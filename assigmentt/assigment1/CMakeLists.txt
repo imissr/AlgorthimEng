@@ -13,6 +13,7 @@ else()
     set(CMAKE_CXX_FLAGS_DEBUG "-Og -g")
     add_compile_options(-Wall -Wextra -pedantic -fopenmp)
 endif()
+find_package(OpenMP REQUIRED)
 
 # Assignment 1 executable
 add_executable(main_assigment1 main_assigment1.cpp MonteCarlo.cpp)
