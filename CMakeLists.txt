@@ -10,34 +10,23 @@ message(STATUS "OpenMP CXX flags: ${OpenMP_CXX_FLAGS}")
 message(STATUS "OpenMP libraries: ${OpenMP_CXX_LIBRARIES}")
 
 include(FetchContent)
+
+# Configure Catch2 to not build its own tests and examples
+set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
+set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
+set(CATCH_BUILD_TESTING OFF CACHE BOOL "")
+set(CATCH_BUILD_EXAMPLES OFF CACHE BOOL "")
+set(CATCH_BUILD_EXTRA_TESTS OFF CACHE BOOL "")
+
 FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.5.4
+        GIT_TAG devel
 )
 FetchContent_MakeAvailable(Catch2)
 
 enable_testing()
 include(CTest)
-
-
-
-add_library(algeng_core STATIC
-        assigment1/MonteCarlo.cpp
-        assigment2/MonteCarloFor.cpp
-        assigment3/pi_monte_carlo_with_LCG.cpp
-        assigment4/benchmark.cpp
-        assigment4/min_max_quicksort.cpp
-)
-
-target_include_directories(algeng_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(algeng_core PUBLIC OpenMP::OpenMP_CXX)
-
-
-function(add_assignment_exe exe_name source_file)
-    add_executable(${exe_name} ${source_file})
-    target_link_libraries(${exe_name} PRIVATE algeng_core)
-endfunction()
 
 
 # Compiler-specific flags
@@ -68,10 +57,12 @@ else()
     set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g")
 endif()
 
-add_assignment_exe(main_assigment1 assigment1/main_assigment1.cpp)
-add_assignment_exe(main_assigment2 assigment2/main_assigment2.cpp)
-add_assignment_exe(main_assigment3 assigment3/main_assigment3.cpp)
-add_assignment_exe(main_assigment4 assigment4/main_assigment4.cpp)
+# Add assignment subdirectories
+add_subdirectory(assigmentt/assigment1)
+add_subdirectory(assigmentt/assigment2)
+add_subdirectory(assigmentt/assigment3)
+add_subdirectory(assigmentt/assigment4)
+add_subdirectory(assigmentt/assigment5)
 
-add_subdirectory(assigment5)
+# Add main project
 add_subdirectory(project)

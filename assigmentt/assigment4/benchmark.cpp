@@ -8,8 +8,7 @@
 #include <vector>
 #include <omp.h>
 
-#include "assigment4/benchmark.h"
-#include "assigment4/min_max_quicksort.h"
+
 
 class Xoroshiro128Plus {
     uint64_t state[2]{};
