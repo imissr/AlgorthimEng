@@ -27,9 +27,7 @@ target_include_directories(project_lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(project_lib PUBLIC
-        algeng_core
-)
+target_link_libraries(project_lib PUBLIC OpenMP::OpenMP_CXX)
 
 # 2) Executable only contains main.cpp and links to the library
 add_executable(project_executable

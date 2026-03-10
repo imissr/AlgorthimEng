@@ -29,11 +29,11 @@ enable_testing()
 include(CTest)
 
 # Add assignment subdirectories
-add_subdirectory(assigmentt/assigment1)
-add_subdirectory(assigmentt/assigment2)
-add_subdirectory(assigmentt/assigment3)
-add_subdirectory(assigmentt/assigment4)
-add_subdirectory(assigmentt/assigment5)
+add_subdirectory(assigment/assigment1)
+add_subdirectory(assigment/assigment2)
+add_subdirectory(assigment/assigment3)
+add_subdirectory(assigment/assigment4)
+add_subdirectory(assigment/assigment5)
 
 # Add main project
 add_subdirectory(project)
