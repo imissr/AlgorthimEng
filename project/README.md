@@ -1,99 +1,3 @@
-# Algorithm Engineering Project
-
-This repository contains various algorithm engineering assignments and a main project focused on image processing and computational techniques.
-
-## Prerequisites
-
-- **CMake** (version 3.26 or higher)
-- **C++ Compiler** with C++20 support (GCC 11+ recommended)
-- **OpenMP** support
-- **Git** (for fetching dependencies)
-
-### Ubuntu/Debian Installation:
-```bash
-sudo apt update
-sudo apt install build-essential cmake libgomp1 git
-```
-
-## Project Structure
-
-```
-AlgorthimEng/
-├── CMakeLists.txt          # Main CMake configuration
-├── main.cpp               # Main entry point (if needed)
-├── assigment1/            # Monte Carlo π estimation
-├── assigment2/            # Monte Carlo with OpenMP
-├── assigment3/            # Monte Carlo with Linear Congruential Generator
-├── assigment4/            # Quicksort with min/max optimization + benchmarking
-├── assigment5/            # FizzBuzz and image quantization
-├── assigment6-11/         # Additional assignments (documentation only)
-└── project/               # Main image processing project
-```
-
-## Building the Project
-
-1. **Clone and navigate to the project directory:**
-   ```bash
-   git clone <repository-url>
-   cd AlgorthimEng
-   ```
-
-2. **Create and enter build directory:**
-   ```bash
-   mkdir build
-   cd build
-   ```
-
-3. **Configure with CMake:**
-   ```bash
-   cmake ..
-   ```
-
-4. **Build the project:**
-   ```bash
-   make -j$(nproc)
-   ```
-   This will build all executables using all available CPU cores.
-
-## Running Assignments
-
-### Assignment 1 - Monte Carlo π Estimation
-```bash
-./main_assigment1
-```
-**Output:** Estimates π using Monte Carlo method with timing information.
-
-### Assignment 2 - Monte Carlo with OpenMP
-```bash
-./main_assigment2
-```
-**Output:** Parallel Monte Carlo π estimation using OpenMP.
-
-### Assignment 3 - Monte Carlo with LCG
-```bash
-./main_assigment3
-```
-**Output:** Monte Carlo estimation using Linear Congruential Generator.
-
-### Assignment 4 - Quicksort Benchmarking
-```bash
-./main_assigment4
-```
-**Output:** Performance benchmarks of optimized quicksort algorithm.
-
-### Assignment 5 - FizzBuzz and Image Quantization
-
-#### FizzBuzz Tests:
-```bash
-./assigment5/catch/catch_tests_fizzbuzz
-```
-
-#### Image Quantization:
-```bash
-./assigment5/quantpng/quantpng <input.png> <output.png> <colors>
-```
-
-## Main Project - Image Processing
 # Scanned Image Enhancer (PPM P3)
 
 A **configurable pipeline** CLI tool that improves scanned document quality before printing or OCR. It reads **PPM P3 (ASCII) images**, applies a sequence of image-processing operations, and writes a cleaned PPM P3 output.
@@ -329,10 +233,11 @@ Tests use the **Catch2** framework and cover comprehensive image processing func
 
 # 2. Configure with testing enabled
 cd build
+
 cmake .. -DBUILD_TESTING=ON
 
 # 3. Build project and tests
-make -j$(nproc)
+make 
 
 # 4. Run tests (choose one method)
 ./project/tests/project_tests        

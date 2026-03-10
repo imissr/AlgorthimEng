@@ -36,7 +36,7 @@ Supports `--verbose` logging and `--threads` to set OpenMP thread count.
 
 ### Operations (all in `project/src/ops/`)
 
-#### 1. [denoise_median.cpp](project/src/ops/denoise_median.cpp)
+*#### 1. [denoise_median.cpp](project/src/ops/denoise_median.cpp)
 - **Algorithm:** 3×3 median filter. Collects 9 neighbors (clamped at borders), uses `std::nth_element` to find median.
 - **OpenMP:** `#pragma omp parallel for` over rows.
 - **Purpose:** Removes salt-and-pepper noise / dust specks.
@@ -56,7 +56,7 @@ Supports `--verbose` logging and `--threads` to set OpenMP thread count.
   - `apply()`: Full-range linear stretch using actual min/max pixel values.
   - `applyPercentile()`: Histogram-based percentile stretch. Builds a histogram, finds the `lowPct` and `highPct` percentile values, clamps pixels into that range, then linearly maps to `[0, maxval]`. Robust to outliers.
 - **OpenMP:** `#pragma omp parallel for` on the final mapping loop in both modes.
-
+*
 #### 5. [threshold_otsu.cpp](project/src/ops/threshold_otsu.cpp)
 - **Algorithm:** Classic **Otsu's method** — global thresholding. Builds a histogram, sweeps through all possible thresholds, maximizes between-class variance $\sigma_B^2 = w_B \cdot w_F \cdot (\mu_B - \mu_F)^2$. Single optimal threshold for the whole image.
 - **OpenMP:** `#pragma omp parallel for` on the final binarization pass.
