@@ -1,4 +1,4 @@
--#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include "ops/threshold_sauvola.h"
 #include "image/image_gray.h"
 
