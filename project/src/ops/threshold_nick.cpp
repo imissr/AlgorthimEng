@@ -80,16 +80,18 @@ GrayImage threshold_nick::binarize(const GrayImage& in, int r, double k) {
 
             // variance = E[x^2] - (E[x])^2
             long double var = secondMoment - mean * mean;
-            if (var < 0.0L) var = 0.0L;
+            if (var < 0.0L) {
+                var = 0.0L;
+            }
 
-            long double stddev = sqrtl(var);
+            // NICK threshold:
+            // T = m + k * sqrt(var + m^2)
+            const long double T = mean + (long double)k * sqrtl(var + mean * mean);
 
-            // NICK: T = m + k * stddev   (k negative shifts threshold down)
-            long double T = mean + (long double)k * stddev;
-
-            int v = clampInt(in.at(x, y), 0, maxv);
+            const int v = clampInt(in.at(x, y), 0, maxv);
             out.at(x, y) = ((long double)v <= T) ? 0 : maxv;
         }
+        
     }
 
     return out;

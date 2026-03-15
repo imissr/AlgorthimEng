@@ -51,6 +51,20 @@ int main(int argc, char **argv)
 
         auto gray = rgbToGray(image);
 
+        if (args.verbose)
+{
+    int minGray = gray.maxval;
+    int maxGray = 0;
+
+    for (int v : gray.data)
+    {
+        if (v < minGray) minGray = v;
+        if (v > maxGray) maxGray = v;
+    }
+
+    std::cout << "Gray range: " << minGray << " .. " << maxGray << "\n";
+}
+
         // median
         auto den = gray;
         if (args.medianRadius > 0)

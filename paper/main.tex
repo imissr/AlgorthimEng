@@ -1,0 +1,73 @@
+\documentclass[nonacm,sigconf,natbib=false]{acmart}
+
+% Command definition
+\AtBeginDocument{
+  \providecommand\BibTeX{{Bib\TeX}}
+}
+
+% Remove paragraph indentation, add space between paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+% Metadata Information => No Copy right for us
+\setcopyright{none}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{grffile}
+\usepackage{float}
+\usepackage{array}
+
+
+\lstdefinestyle{tree}{
+    basicstyle=\ttfamily\small,
+    columns=fullflexible,
+    keepspaces=true,
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+
+\begin{document}
+
+\title{Document Image Binarization Pipeline with Parallel Image Processing}
+
+% Authors
+\author{Aghiad Khertabeel}
+\email{aghiad.khertabeel@uni-jena.de}
+\affiliation{
+  \institution{Friedrich Schiller University Jena}
+  \city{Jena}
+  \country{Germany}
+}
+
+\author{Mohamad Khaled Minawe}
+\email{minawe.mohamad.khaled@uni-jena.de}
+\affiliation{
+  \institution{Friedrich Schiller University Jena}
+  \city{Jena}
+  \country{Germany}
+}
+
+\renewcommand{\shortauthors}{Khertabeel and Minawe}
+
+\input{sections/abstract.tex}
+
+\keywords{document image binarization, adaptive thresholding, morphological operations, border cleanup, image preprocessing, image postprocessing}
+
+% Make the title area
+\maketitle
+
+\input{sections/introduction}
+\input{sections/background}
+\input{sections/systemarchitecture}
+\input{sections/implementedBinzMethod}
+\input{sections/conclusion}
+
+\bibliographystyle{plain}
+\bibliography{bibliography/sources}
+
+\input{sections/appendix}
+
+\end{document}

@@ -240,7 +240,7 @@ GrayImage threshold_su::binarize(const GrayImage &in,
     // STEP 2c: Edge mask (strict: contrast >= tOtsu)
     // ------------------------------------------------------------------
 
-    std::vector<std::uint8_t> edgeMask(N, 0);
+   std::vector<std::uint8_t> edgeMask(N, 0);
 
 #pragma omp parallel for
     for (std::int64_t i = 0; i < (std::int64_t)N; ++i)
@@ -248,6 +248,21 @@ GrayImage threshold_su::binarize(const GrayImage &in,
         edgeMask[(std::size_t)i] =
             (contrast[(std::size_t)i] >= (std::uint8_t)tOtsu) ? 1u : 0u;
     }
+
+  /*  std::vector<std::uint8_t> E(N, 1);
+
+double contrastThreshold = 0.2;
+
+#pragma omp parallel for
+for (std::int64_t i = 0; i < (std::int64_t)N; ++i)
+{
+    double c = contrast[i] / 255.0;
+
+    if (c >= contrastThreshold)
+        E[i] = 0;      // high contrast pixel
+    else
+        E[i] = 1;      // not high contrast
+}*/
 
     // ------------------------------------------------------------------
     // STEP 3: Integral images
@@ -281,8 +296,8 @@ GrayImage threshold_su::binarize(const GrayImage &in,
             const int iy = y - 1;
 
             std::size_t p = (std::size_t)iy * (std::size_t)w + (std::size_t)ix;
+            //long double e = 1.0L - (long double)E[p];
             long double e = (edgeMask[p] != 0) ? 1.0L : 0.0L;
-
             int v = clampInt(in.at(ix, iy), 0, maxv);
             long double lv = (long double)v;
 

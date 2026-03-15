@@ -1,0 +1,572 @@
+\section{Implementation}
+\label{sec:implementation}
+
+In this section, we will describe the implementation of all mentioned methods in the Processing layer and Operation layer of the system, starting with the denoising method, then background estimation and removal, followed by the binarization method, and finally the morphological operations. We will also discuss the parallelization techniques used in each method and how they contribute to the overall performance of the system.
+\subsection{Median Filter for Image Denoising}
+
+For the denoising method, we implemented a median filter, which is a non-linear digital filtering technique. The median filter works by replacing each pixel value with the median value of the pixels in its $3 \times 3$ neighborhood. This method is effective in removing salt-and-pepper noise while preserving image edges.
+
+In our implementation, we iterate over every pixel, collect the values of its neighboring pixels, compute the median using std::nth\_element, and assign it to the output image. For border pixels, the coordinates are clamped so that the nearest valid edge pixels are reused.
+
+To improve performance, the filter is parallelized with OpenMP, allowing multiple image rows to be processed simultaneously by different threads.
+
+\subsection{Background Estimation}
+% https://www.cl72.org/090imagePLib/books/Gonzales,Woods-Digital.Image.Processing.4th.Edition.pdf page 328 -> Arithmetic Mean Filter
+
+To estimate the background of the image, we implemented a separable box blur filter~\cite{Gonzalez2008Digital}. 
+The box blur computes the average intensity of pixels within a square neighborhood 
+defined by a radius $r$. Instead of computing a full two-dimensional convolution, 
+the filter is implemented as two one-dimensional passes: a horizontal pass followed 
+by a vertical pass. This technique significantly reduces computational complexity.
+
+Formally, the horizontal pass computes an intermediate image
+
+\[
+I_{\text{tmp}}(x,y) =
+\frac{1}{2r+1}
+\sum_{i=-r}^{r} I\bigl(\mathrm{clamp}(x+i), y\bigr),
+\]
+
+where $I(x,y)$ is the intensity of the original image at position $(x,y)$, $I_{\text{tmp}}(x,y)$ is the intermediate image produced after the horizontal blur, $r$ is the radius of the blur window, $2r+1$ is the width of the averaging window, and $\mathrm{clamp}(\cdot)$ restricts the coordinate to valid image boundaries.
+
+The vertical pass computes the final background image as
+
+\[
+I_{\text{background}}(x,y) =
+\frac{1}{2r+1}
+\sum_{j=-r}^{r} I_{\text{tmp}}\bigl(x, \mathrm{clamp}(y+j)\bigr).
+\]
+
+where $I_{\text{background}}(x,y)$ is the estimated background intensity, $I_{\text{tmp}}(x,y)$ is the horizontally blurred intermediate image, $r$ is the blur radius, and $\mathrm{clamp}(\cdot)$ ensures that coordinates remain within valid image bounds.
+
+Equivalently, this corresponds to averaging over a square neighborhood of size 
+$(2r+1)\times(2r+1)$:
+
+\[
+I_{\text{background}}(x,y) =
+\frac{1}{(2r+1)^2}
+\sum_{i=-r}^{r} \sum_{j=-r}^{r}
+I\bigl(\mathrm{clamp}(x+i), \mathrm{clamp}(y+j)\bigr).
+\]
+
+where $(x,y)$ denotes the pixel position, $I(x,y)$ is the intensity of the original image, $r$ is the blur radius, and $(2r+1)^2$ represents the total number of pixels in the square neighborhood.
+
+In the horizontal pass, a sliding window of size $(2r+1)$ moves across each row of 
+the image. The sum of the pixel values inside the window is updated efficiently by 
+subtracting the value leaving the window and adding the value entering the window. 
+The average value of the window is then written to a temporary image.
+
+In the vertical pass, the same sliding-window approach is applied column-wise to the 
+temporary image to produce the final blurred background image.
+
+For border pixels, coordinates are clamped so that the nearest valid edge pixels 
+are reused. To improve performance, both passes are parallelized using OpenMP, 
+allowing multiple rows or columns to be processed simultaneously by different threads.
+
+\subsection{Background Removal}
+
+After estimating the background, it is removed from the denoised image through 
+pixel-wise subtraction. For each pixel, the background intensity is subtracted 
+from the denoised image intensity, and a constant target value is added to 
+maintain a suitable brightness level.
+
+Formally, the output pixel value is computed as:
+
+\[
+I_{\text{out}}(x,y) =
+\mathrm{clamp}\big(
+I_{\text{denoised}}(x,y)
+-
+I_{\text{background}}(x,y)
++
+T
+\big),
+\]
+
+where $I_{\text{denoised}}(x,y)$ is the intensity of the denoised image,\\
+$I_{\text{background}}(x,y)$ is the estimated background intensity
+$T$ is a constant target intensity added to maintain brightness,
+$I_{\text{out}}(x,y)$ is the final output image after background removal,
+and $\mathrm{clamp}(\cdot)$ restricts the result to the valid intensity range.
+
+This operation highlights foreground structures by removing slowly varying 
+background illumination while ensuring that pixel values remain within the 
+allowed intensity range.
+
+\subsection{Contrast Stretching}
+
+
+Contrast stretching is an image enhancement technique used to improve the contrast of a grayscale image by expanding the range of intensity values. In many images, the pixel intensities occupy only a small portion of the available dynamic range, which results in a low-contrast appearance. Contrast stretching addresses this problem by applying a linear transformation that maps the minimum and maximum intensity values of the image to the full available range~\cite{Gonzalez2008Digital}.
+
+In our implementation, we first determine the minimum and maximum pixel intensity values present in the image, denoted by $I_{\min}$ and $I_{\max}$. Each pixel value $I$ is then transformed using the following linear scaling function:
+
+\[
+I' = \frac{I - I_{\min}}{I_{\max} - I_{\min}} \times I_{\text{maxval}}
+\]
+
+where $I$ is the original pixel intensity, $I'$ is the transformed pixel intensity, $I_{\min}$ is the minimum intensity value in the image, $I_{\max}$ is the maximum intensity value in the image, and $I_{\text{maxval}}$ is the maximum possible intensity value (e.g., 255 for an 8-bit image).
+
+This transformation linearly stretches the intensity values so that the smallest value becomes $0$ and the largest value becomes $I_{\text{maxval}}$. As a result, the full dynamic range of the image is utilized, which increases the visual contrast.
+
+In addition to the standard contrast stretching method, we also implement a percentile-based variant. Instead of using the absolute minimum and maximum intensity values, lower and upper thresholds are determined using selected percentiles of the image histogram. This approach reduces the influence of outlier pixels and produces a more robust contrast enhancement.
+
+\subsection{Binarization methods}
+
+The binarization phase is responsible for converting the preprocessed grayscale image into a binary image consisting of only black and white pixels. In our implementation, several binarization methods are provided, including Otsu's method, Sauvola's method, Nick's method, Su et al.'s method, and the adaptive thresholding method proposed by Bataineh et al. Most of these methods are implemented as described in their respective papers. However, for some methods, such as the adaptive thresholding method by Bataineh et al. and the method by Su et al., certain modifications were introduced to improve efficiency for specific use cases. These modifications, along with the implementation details, are discussed in the following sections.
+
+\subsubsection{Otsu's Method}
+In our implementation, Otsu's method~\cite{otsu1979threshold} is used as a global thresholding
+technique to convert the grayscale image into a binary image.
+The algorithm first computes the histogram of the image intensities.
+Each histogram entry counts the number of pixels having a specific
+intensity value.
+
+Using this histogram, the algorithm iterates over all possible
+threshold values $t$ in the intensity range $[0, I_{\text{max}}]$.
+For each candidate threshold, the pixels are divided into two classes:
+background and foreground.
+
+The number of pixels belonging to each class is computed as:
+
+\[
+w_B(t) = \sum_{i=0}^{t} h(i), \qquad
+w_F(t) = N - w_B(t),
+\]
+
+where $h(i)$ is the histogram value at intensity level $i$, $w_B(t)$ is the number of pixels in the background class, $w_F(t)$ is the number of pixels in the foreground class, and $N$ is the total number of pixels in the image.
+
+The mean intensity of each class is then calculated as:
+
+\[
+\mu_B(t) = \frac{\sum_{i=0}^{t} i \cdot h(i)}{w_B(t)}, \qquad
+\mu_F(t) = \frac{\sum_{i=t+1}^{I_{\text{max}}} i \cdot h(i)}{w_F(t)}.
+\]
+
+Using these values, the between-class variance is computed as:
+
+\[
+\sigma_B^2(t) = w_B(t)\,w_F(t)\,(\mu_B(t) - \mu_F(t))^2 .
+\]
+
+The algorithm selects the threshold $t^*$ that maximizes the
+between-class variance:
+
+\[
+t^* = \arg\max_t \sigma_B^2(t).
+\]
+
+After the optimal threshold is found, the binarization step is applied
+pixel-wise to the image. Each pixel is assigned either black or white
+depending on its intensity relative to the threshold:
+
+\[
+I_{\text{out}}(x,y) =
+\begin{cases}
+0, & I(x,y) \le t^* \\
+I_{\text{max}}, & I(x,y) > t^*
+\end{cases}
+\]
+
+where $I(x,y)$ is the original pixel intensity, $I_{\text{out}}(x,y)$ is the resulting binary pixel value, $t^*$ is the optimal threshold computed by Otsu's method, and $I_{\text{max}}$ is the maximum intensity value (e.g., 255).
+
+In the implementation, the final binarization step is parallelized
+using OpenMP, allowing multiple pixels to be processed simultaneously.
+
+% https://www.researchgate.net/publication/221253803_Comparison_of_Niblack_inspired_Binarization_Methods_for_Ancient_Documents nick method
+\subsubsection{Nick's Method}
+
+Nick's method~\cite{khurshid2009comparison} is implemented as a local thresholding algorithm that
+computes a threshold for every pixel based on the intensity statistics
+of its surrounding neighborhood.
+
+To efficiently compute local statistics for each pixel, two integral
+images are constructed: one storing the cumulative sum of intensities
+and another storing the cumulative sum of squared intensities. These
+integral images allow the sum of pixel values inside any rectangular
+region to be computed in constant time.
+
+For each pixel $(x,y)$, a square window centered at the pixel with
+radius $r$ is considered. If the window extends outside the image
+boundaries, it is clipped so that only valid image pixels are included.
+The number of pixels inside the window is denoted by $A(x,y)$.
+
+Using the integral images, the sum of intensities $S(x,y)$ and the sum
+of squared intensities $S_2(x,y)$ inside the window are computed. From
+these values, the local mean and the second moment are calculated as:
+:
+\[
+m(x,y) = \frac{S(x,y)}{A(x,y)}, \qquad
+M_2(x,y) = \frac{S_2(x,y)}{A(x,y)}.
+\]
+where $A(x,y)$ is the number of pixels inside the local window.
+
+The local variance is then obtained using
+
+\[
+\mathrm{Var}(x,y) = M_2(x,y) - m(x,y)^2 .
+\]
+
+If numerical inaccuracies produce slightly negative variance values,
+the value is clamped to zero.
+
+The threshold for the current pixel is computed using the Nick formula
+
+\[
+T(x,y) = m(x,y) + k \sqrt{\mathrm{Var}(x,y) + m(x,y)^2}.
+\]
+
+The original pixel value $I(x,y)$ is compared with the threshold
+$T(x,y)$. If the pixel intensity is less than or equal to the
+threshold, the output pixel is set to $0$ (black); otherwise it is set
+to $I_{\text{max}}$ (white).
+
+The threshold computation and binarization are performed for every
+pixel in the image. To improve performance, this step is parallelized
+using OpenMP so that multiple image rows can be processed
+simultaneously.
+
+
+\subsubsection{Sauvola's Method}
+
+Sauvola's method~\cite{Sauvola2000} is implemented as a local thresholding algorithm in
+which a separate threshold is computed for each pixel based on the
+intensity statistics of its surrounding neighborhood.
+
+To efficiently compute local statistics for every pixel, two integral
+images are constructed: one storing the cumulative sum of intensities
+and another storing the cumulative sum of squared intensities. These
+integral images allow the sum of pixel values inside any rectangular
+window to be obtained in constant time.
+
+For each pixel $(x,y)$, a square window centered at the pixel with
+radius $r$ is considered. If the window extends outside the image
+boundaries, it is clipped so that only valid image pixels are included.
+The number of pixels inside the window is denoted by $A(x,y)$.
+
+Using the integral images, the sum of intensities $S(x,y)$ and the sum
+of squared intensities $S_2(x,y)$ inside the window are computed. From
+these values, the local mean, variance, and standard deviation are
+calculated as:
+
+\[
+m(x,y) = \frac{S(x,y)}{A(x,y)}, \qquad
+M_2(x,y) = \frac{S_2(x,y)}{A(x,y)},
+\]
+
+\[
+\mathrm{Var}(x,y) = M_2(x,y) - m(x,y)^2, \qquad
+\sigma(x,y) = \sqrt{\mathrm{Var}(x,y)}.
+\]
+
+If numerical inaccuracies produce a slightly negative variance, the
+value is clamped to zero before computing the square root.
+
+The local threshold is then computed using Sauvola's formula
+
+\[
+T(x,y) = m(x,y)\left(1 + k\left(\frac{\sigma(x,y)}{R} - 1\right)\right),
+\]
+
+where $k$ is a user-defined parameter and the constant value
+$R = 125$ is used in the implementation.
+
+After computing the threshold, the original pixel value $I(x,y)$ is
+compared with $T(x,y)$. If the pixel intensity is less than or equal
+to the threshold, the output pixel is set to $0$ (black); otherwise it
+is set to $I_{\text{max}}$ (white).
+
+The threshold computation and binarization are performed for every
+pixel in the image. To improve performance, this step is parallelized
+using OpenMP so that multiple image rows can be processed
+simultaneously.
+
+\subsubsection{Adaptive Thresholding Method by Bataineh et al}
+
+The adaptive thresholding method~\cite{Bataineh2011} proposed by Bataineh et al. is implemented as a local thresholding algorithm
+that combines global image statistics with local window statistics.
+
+To efficiently compute the required local statistics, two integral
+images are constructed: one storing the cumulative sum of pixel
+intensities and another storing the cumulative sum of squared
+intensities. These integral images allow the sum of intensities inside
+any rectangular window to be obtained in constant time.
+
+Using the integral image of intensities, the global mean intensity
+$m_g$ of the entire image is computed once at the beginning of the
+algorithm.
+
+For each pixel $(x,y)$, a square window with radius $r$ centered at the
+pixel is considered. If the window extends beyond the image borders,
+its coordinates are clipped so that only valid pixels are included.
+The number of pixels inside the window is denoted by $A(x,y)$.
+
+Using the integral images, the sum of intensities $S(x,y)$ and the sum
+of squared intensities $S_2(x,y)$ inside the window are computed.
+From these values, the local mean and variance are calculated as:
+
+\[
+m_w = \frac{S(x,y)}{A(x,y)}, \qquad
+M_2 = \frac{S_2(x,y)}{A(x,y)},
+\]
+
+\[
+\mathrm{Var} = M_2 - m_w^2.
+\]
+
+The local standard deviation of the window is then obtained as:
+
+\[
+\sigma_w = \sqrt{\mathrm{Var}}.
+\]
+
+During a first pass over the image, the standard deviation values
+$\sigma_w$ are computed for all windows in order to determine the
+minimum and maximum standard deviation values,
+$\sigma_{\min}$ and $\sigma_{\max}$.
+
+Using these values, the adaptive standard deviation is computed as:
+
+\[
+\sigma_{Adaptive} =
+\frac{\sigma_w - \sigma_{\min}}
+{\sigma_{\max} - \sigma_{\min}}.
+\]
+
+The threshold for each pixel is then calculated as:
+
+\[
+T = m_w -
+\frac{m_w^2 - \sigma_w}
+{(m_g + \sigma_w)(\sigma_{Adaptive} + \sigma_w)}.
+\]
+
+\paragraph{Modification of the Adaptive Thresholding Method}
+
+In the original formulation presented in the paper, all pixel
+intensity values are normalized to the range $[0,1]$ before computing
+the threshold. In our implementation, the algorithm operates directly
+on the raw grayscale values in the range $[0, I_{\text{max}}]$.
+Therefore, the adaptive standard deviation $\sigma_{Adaptive}$,
+which is originally computed in the normalized range $[0,1]$, is
+converted back to the raw intensity scale to maintain unit consistency
+within the threshold equation.
+
+This conversion is performed as:
+
+\[
+\sigma_{Adaptive}^{raw} =
+\sigma_{Adaptive} \cdot \sigma_{\max}.
+\]
+
+The resulting value is then combined with the local standard deviation
+$\sigma_w$ in the denominator of the threshold formula. This
+modification ensures that all quantities in the threshold computation
+are expressed in the same intensity scale.
+
+After computing the threshold $T$, the pixel intensity $I(x,y)$ is
+compared with the threshold. If the intensity is smaller than $T$, the
+output pixel is set to $0$ (black); otherwise it is set to
+$I_{\text{max}}$ (white).
+
+The threshold computation and binarization are performed for every
+pixel in the image. To improve performance, the processing of image
+rows is parallelized using OpenMP so that multiple pixels can be
+processed simultaneously.
+
+\subsubsection{Su, Lu, Tan (2010) Method}
+
+The method proposed~\cite{Su2010} by Su et al. (2010) is designed for the
+binarization of degraded document images, particularly historical
+documents affected by uneven illumination, background noise, and
+ink bleeding. The method first detects high-contrast pixels around
+text stroke boundaries and then estimates a local threshold based on
+these pixels.
+
+\paragraph{Contrast Image Construction}
+
+The algorithm begins by constructing a contrast image that highlights
+pixels located around text stroke boundaries. Instead of using the
+traditional image gradient, the contrast is computed using the local
+maximum and minimum intensities within a small neighborhood window.
+For each pixel $(x,y)$, the contrast value is defined as:
+
+\[
+D(x,y) =
+\frac{f_{\max}(x,y) - f_{\min}(x,y)}
+     {f_{\max}(x,y) + f_{\min}(x,y) + \epsilon},
+\]
+
+where $f_{\max}(x,y)$ and $f_{\min}(x,y)$ denote the maximum and
+minimum intensities inside a $3\times3$ neighborhood centered at
+$(x,y)$, and $\epsilon$ is a small positive constant used to avoid
+division by zero. This formulation normalizes the local intensity
+difference and reduces the effect of illumination variation across
+the document image. As a result, pixels located near text stroke
+boundaries typically produce higher contrast values.
+
+\paragraph{High Contrast Pixel Detection}
+
+After computing the contrast image, high-contrast pixels are detected
+using global thresholding. The Otsu method is applied to the contrast
+image to automatically determine a threshold value $t_{Otsu}$. Pixels
+with contrast values greater than or equal to this threshold are
+classified as high-contrast pixels, which usually correspond to text
+stroke boundaries.
+
+Formally, a binary edge mask $E(x,y)$ is defined as:
+
+\[
+E(x,y) =
+\begin{cases}
+1 & \text{if } D(x,y) \ge t_{Otsu} \\
+0 & \text{otherwise}.
+\end{cases}
+\]
+
+These detected pixels provide reliable information about the location
+of text strokes.
+
+\paragraph{Stroke Width Estimation}
+
+The size of the local neighborhood window and the minimum number of
+edge pixels required for classification depend on the approximate
+width of the text strokes. The stroke width is estimated from the
+contrast image by analyzing the distances between adjacent peak
+contrast pixels along each image row.
+
+A histogram of distances between consecutive peak pixels is
+constructed, and the most frequent distance is taken as an estimate
+of the text stroke width. This value is then used to determine the
+window radius $r$ and the minimum number of edge pixels $N_{\min}$.
+
+\paragraph{Local Threshold Estimation}
+
+For each pixel $(x,y)$, a square window of radius $r$ is considered.
+Within this window, the number of detected high-contrast pixels is
+denoted by $N_e$. If the number of edge pixels satisfies the
+condition $N_e \ge N_{\min}$, the local threshold is computed using
+the intensity statistics of these high-contrast pixels.
+
+Let $E_{\text{mean}}$ and $E_{\text{std}}$ denote the mean and
+standard deviation of the intensities of the detected edge pixels
+within the window. The classification rule is then defined as:
+
+\[
+R(x,y) =
+\begin{cases}
+1 & \text{if } N_e \ge N_{\min}
+      \text{ and }
+      I(x,y) \le E_{\text{mean}} + \frac{E_{\text{std}}}{2}, \\
+0 & \text{otherwise}.
+\end{cases}
+\]
+
+Pixels satisfying the condition are classified as foreground
+(text), while the remaining pixels are classified as background.
+
+\paragraph{Modifications in the Implementation}
+
+Although the overall structure follows the method described in the
+original paper, several modifications were introduced in our
+implementation to improve robustness when processing real-world
+images.
+
+First, during stroke width estimation, very small peak-to-peak distances are ignored. 
+In the current implementation, distances smaller than 7 pixels are excluded from the 
+histogram, since such distances often originate from noise or background texture 
+rather than actual text strokes.
+
+Second, the estimated stroke width is converted into the local window parameters 
+by forcing the width to be odd. If the estimated stroke width is $W_s$, then the 
+radius is set to
+\[
+r = \frac{W_s - 1}{2}
+\]
+and the minimum required number of edge pixels is set to
+\[
+N_{\min} = W_s.
+\]
+
+Third, when the number of detected edge pixels within the local window is smaller 
+than $N_{\min}$, a fallback strategy is used. Instead of relying only on edge pixels, 
+the mean intensity of all pixels in the local window is computed, and the threshold 
+is set to
+\[
+T = \mu_{\text{local}} - 10.
+\]
+This makes the fallback more conservative and reduces the risk of
+bright background regions being misclassified as foreground.
+At the same time, it ensures that a reasonable threshold is available
+even when the number of detected edge pixels within the local window
+is insufficient.
+
+Finally, integral images are used to efficiently compute both edge-based statistics 
+and the sum of all pixel intensities inside local windows, allowing constant-time 
+evaluation per pixel.
+
+These modifications improve the stability of the algorithm when
+processing natural photographs and degraded document images while
+preserving the core principles of the original Su-Lu-Tan method.
+
+\subsection{Morphological Operations}
+
+Our implementation provides four morphological operations:
+erosion, dilation, opening, and closing. All operations use a
+fixed $3 \times 3$ neighborhood around each pixel.
+
+\paragraph{Erosion}
+
+For each pixel $(x,y)$, the algorithm inspects all pixels in the
+$3 \times 3$ neighborhood centered at that location. The output pixel
+is set to $0$ only if all pixels within the neighborhood are equal to
+$0$. Otherwise, the output pixel is set to $I_{\text{max}}$.
+
+\[
+I_{\text{erode}}(x,y) =
+\begin{cases}
+0, & \text{if } I(x+i,y+j) = 0 \ \forall (i,j) \in [-1,1]^2 \\
+I_{\text{max}}, & \text{otherwise}
+\end{cases}
+\]
+
+\paragraph{Dilation}
+
+For dilation, the same $3 \times 3$ neighborhood is examined.
+If at least one pixel within the neighborhood is equal to $0$,
+the output pixel becomes $0$. Otherwise, the output pixel is set
+to $I_{\text{max}}$.
+
+\[
+I_{\text{dilate}}(x,y) =
+\begin{cases}
+0, & \text{if } \exists (i,j) \in [-1,1]^2 \text{ such that } I(x+i,y+j) = 0 \\
+I_{\text{max}}, & \text{otherwise}
+\end{cases}
+\]
+
+\paragraph{Opening}
+
+The opening operation is implemented as a sequential combination of
+erosion followed by dilation:
+
+\[
+I_{\text{open}} = \text{dilate}(\text{erode}(I)).
+\]
+
+\paragraph{Closing}
+
+The closing operation is implemented as dilation followed by erosion:
+
+\[
+I_{\text{close}} = \text{erode}(\text{dilate}(I)).
+\]
+
+
+The neighborhood indices are clamped to the valid image range in order
+to handle border pixels. The computations are parallelized using
+\texttt{OpenMP}, allowing different image rows to be processed
+simultaneously.
+
+
+
+
