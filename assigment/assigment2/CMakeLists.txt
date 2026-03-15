@@ -16,7 +16,7 @@ endif()
 find_package(OpenMP REQUIRED)
 
 # Assignment 2 executable
-add_executable(main_assigment2 main_assigment2.cpp MonteCarloFor.cpp)
+add_executable(main_assigment2 main_assigment2.cpp)
 if(NOT MSVC)
     target_link_libraries(main_assigment2 PRIVATE -fopenmp)
 else()

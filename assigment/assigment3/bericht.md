@@ -10,7 +10,7 @@ printf(" %d", omp_get_thread_num());
 - All threads are created, and **each one immediately executes a single `printf`**.
 - There is **no extra computation** that would make one thread noticeably slower or faster than another.
 - The **OS / OpenMP runtime schedules these threads independently and arbitrarily** on the logical cores.
-- They all **race to write to the same standard output stream**; the runtime just serializes the access internally, but **the order in which threads reach `printf` is essentially random**.
+- They all **race to write to the same standard output stream**. the runtime just serializes the access internally, but **the order in which threads reach `printf` is essentially random**.
 
 **So you see the thread numbers as a random permutation.**
 
